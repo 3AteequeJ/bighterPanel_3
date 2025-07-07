@@ -154,7 +154,7 @@ class _Appointments_pgState extends State<Appointments_pg> {
                     controller: _firstController,
                     itemBuilder: (context, index) {
                       return NewAppointments_card(
-                        am: glb.Models.appointments_lst[index],
+                        appointment: glb.Models.appointments_lst[index],
                         filter: filter_value,
                       );
                     }),

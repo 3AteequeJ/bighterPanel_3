@@ -10,6 +10,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 class DoctorShopProd extends StatefulWidget {
   const DoctorShopProd({super.key});
@@ -19,76 +20,23 @@ class DoctorShopProd extends StatefulWidget {
 }
 
 class _DoctorShopProdState extends State<DoctorShopProd> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    GetAdminProducts_async();
-  }
+  List<DoctorShop_model> allProducts = glb.Models.DoctorShop_lst;
+  List<DoctorShop_model> filteredProducts = [];
+  final TextEditingController searchController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    var currentWidth = MediaQuery.of(context).size.width;
-    return Container(
-      child: Column(
-        children: [
-          Txt(
-            text: "Products",
-            size: 18,
-            fntWt: FontWeight.bold,
-            fontColour: Colours.RussianViolet,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // ElevatedButton(
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: Colours.Red,
-              //   ),
-              //   onPressed: () {},
-              //   child: Txt(text: "Orders"),
-              // ),
-              // SizedBox(
-              //   width: 10,
-              // ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colours.orange,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Cart_scrn(),
-                    ),
-                  );
-                },
-                child: Txt(text: "Cart"),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          Expanded(
-            child: currentWidth <= 600
-                ? ListView.builder(
-                    itemCount: dsm.length,
-                    itemBuilder: (context, index) {
-                      return DoctorShop_card(dsm: dsm[index]);
-                    },
-                  )
-                : GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, childAspectRatio: 5),
-                    itemCount: dsm.length,
-                    itemBuilder: (context, index) {
-                      return DoctorShop_card(dsm: dsm[index]);
-                    },
-                  ),
-          )
-        ],
-      ),
-    );
+  void initState() {
+    super.initState();
+    _loadProducts(); // Call async loader
+    searchController.addListener(_onSearchChanged);
+  }
+
+  void _loadProducts() async {
+    await GetAdminProducts_async(); // Fetch from API or backend
+    setState(() {
+      allProducts = glb.Models.DoctorShop_lst;
+      filteredProducts = allProducts;
+    });
   }
 
   List<DoctorShop_model> dsm = [];
@@ -133,5 +81,69 @@ class _DoctorShopProdState extends State<DoctorShopProd> {
     } catch (e) {
       print("Exception => $e");
     }
+  }
+
+  void _onSearchChanged() {
+    final query = searchController.text.toLowerCase();
+    setState(() {
+      filteredProducts = allProducts.where((item) {
+        return item.name.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.removeListener(_onSearchChanged);
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(3.w),
+      child: Column(
+        children: [
+          // 🔍 Search Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: TextField(
+              controller: searchController,
+              decoration: const InputDecoration(
+                icon: Icon(Icons.search),
+                hintText: 'Search products...',
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          SizedBox(height: 2.h),
+
+          // 🛍 Product Grid
+          Expanded(
+            child: filteredProducts.isEmpty
+                ? const Center(child: Text("No products found"))
+                : GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount:
+                          (Device.screenType == ScreenType.tablet) ? 4 : 2,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      return DoctorShop_card(dsm: filteredProducts[index]);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
   }
 }

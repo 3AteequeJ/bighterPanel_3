@@ -1,1156 +1,356 @@
 import 'dart:convert';
 import 'dart:html';
-import 'package:bighter_panel/Admin/Models/myProducts.dart';
-import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+
 import 'package:bighter_panel/Admin/Cards/products_card.dart';
+import 'package:bighter_panel/Admin/Models/myProducts.dart';
 import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/sizer.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 class newUserPharmacy extends StatefulWidget {
-  const newUserPharmacy({super.key});
-
   @override
-  State<newUserPharmacy> createState() => _newUserPharmacyState();
+  _newUserPharmacyState createState() => _newUserPharmacyState();
 }
 
 enum SingingCharacter { User, Doctor }
 
-List<String> list = ['All', 'User', 'Doctor'];
-
 class _newUserPharmacyState extends State<newUserPharmacy> {
+  final prodNM_cont = TextEditingController();
+  final price_cont = TextEditingController();
+  final desc_cont = TextEditingController();
+  final searchController = TextEditingController();
+
   SingingCharacter? _character = SingingCharacter.User;
-
-  String dropDown_value = list.first;
-
-  TextEditingController prodNM_cont = TextEditingController();
-  TextEditingController price_cont = TextEditingController();
-  TextEditingController desc_cont = TextEditingController();
-  bool add_prod = false;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    GetAdminProducts_async();
-    seperatrList(glb.Models.adminProducts_lst);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var currentWidth = MediaQuery.of(context).size.width;
-    return currentWidth <= 600
-        ? Container(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          add_prod = true;
-                        });
-                      },
-                      child: Container(
-                        width: 50.w,
-                        color:
-                            add_prod ? Colours.orange : Colours.scaffold_white,
-                        child: Center(child: Txt(text: "Add product")),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          add_prod = false;
-                        });
-                      },
-                      child: Container(
-                        width: 50.w,
-                        color:
-                            add_prod ? Colours.scaffold_white : Colours.orange,
-                        child: Center(child: Txt(text: "My products")),
-                      ),
-                    )
-                  ],
-                ),
-                Expanded(
-                  child: add_prod
-                      ? Padding(
-                          padding: EdgeInsets.all(8.0.sp),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  height: 2.h,
-                                ),
-                                SizedBox(
-                                  width: currentWidth <= 600
-                                      ? 100.w
-                                      : Sizer.w_50 * 6,
-                                  child: TextField(
-                                    controller: prodNM_cont,
-                                    decoration: InputDecoration(
-                                      hoverColor: Colours.HunyadiYellow,
-                                      labelText: "Product name",
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            Sizer.radius_10 / 5),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 2.h,
-                                ),
-                                SizedBox(
-                                  width: currentWidth <= 600
-                                      ? 100.w
-                                      : Sizer.w_50 * 6,
-                                  child: TextField(
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(10)
-                                    ],
-                                    controller: price_cont,
-                                    decoration: InputDecoration(
-                                      hoverColor: Colours.HunyadiYellow,
-                                      labelText: "Product price",
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            Sizer.radius_10 / 5),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: Sizer.h_10 * 2,
-                                ),
-                                SizedBox(
-                                  width: currentWidth <= 600
-                                      ? 100.w
-                                      : Sizer.w_50 * 14,
-                                  height: 100,
-                                  child: TextField(
-                                    controller: desc_cont,
-                                    decoration: InputDecoration(
-                                      hoverColor: Colours.HunyadiYellow,
-                                      labelText: "Description",
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            Sizer.radius_10 / 5),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Row(
-                                  children: <Widget>[
-                                    SizedBox(
-                                      width: 200,
-                                      child: ListTile(
-                                        title: const Text('User'),
-                                        leading: Radio<SingingCharacter>(
-                                          value: SingingCharacter.User,
-                                          groupValue: _character,
-                                          onChanged: (SingingCharacter? value) {
-                                            setState(() {
-                                              _character = value;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 200,
-                                      child: ListTile(
-                                        title: const Text('Doctor'),
-                                        leading: Radio<SingingCharacter>(
-                                          value: SingingCharacter.Doctor,
-                                          groupValue: _character,
-                                          onChanged: (SingingCharacter? value) {
-                                            setState(() {
-                                              _character = value;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Wrap(
-                                  spacing: 30,
-                                  runSpacing: 10,
-                                  children: [
-                                    Container(
-                                      height: 180,
-                                      width: 140,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                              height: 130,
-                                              width: 140,
-                                              color:
-                                                  Colours.RosePink.withOpacity(
-                                                      .3),
-                                              child: Image.network(
-                                                "${img1}",
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return Center(
-                                                    child: Icon(Icons.image),
-                                                  );
-                                                },
-                                              )),
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () {
-                                                selectImage("img1");
-                                              },
-                                              child: Container(
-                                                color: Colours.RosePink
-                                                    .withOpacity(.7),
-                                                child: Row(
-                                                  children: [
-                                                    Txt(text: "Select image"),
-                                                    Icon(Icons.upload_file),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // ? image 2
-                                    Container(
-                                      height: 180,
-                                      width: 140,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                              height: 130,
-                                              width: 140,
-                                              color:
-                                                  Colours.RosePink.withOpacity(
-                                                      .3),
-                                              child: Image.network(
-                                                "${img2}",
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return Center(
-                                                    child: Icon(Icons.image),
-                                                  );
-                                                },
-                                              )),
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () {
-                                                selectImage("img2");
-                                              },
-                                              child: Container(
-                                                color: Colours.RosePink
-                                                    .withOpacity(.7),
-                                                child: Row(
-                                                  children: [
-                                                    Txt(text: "Select image"),
-                                                    Icon(Icons.upload_file),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // ? image 3
-                                    Container(
-                                      height: 180,
-                                      width: 140,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                              height: 130,
-                                              width: 140,
-                                              color:
-                                                  Colours.RosePink.withOpacity(
-                                                      .3),
-                                              child: Image.network(
-                                                "${img3}",
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return Center(
-                                                    child: Icon(Icons.image),
-                                                  );
-                                                },
-                                              )),
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () {
-                                                selectImage("img3");
-                                              },
-                                              child: Container(
-                                                color: Colours.RosePink
-                                                    .withOpacity(.7),
-                                                child: Row(
-                                                  children: [
-                                                    Txt(text: "Select image"),
-                                                    Icon(Icons.upload_file),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // ? img 4
-                                    Container(
-                                      height: 180,
-                                      width: 140,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                              height: 130,
-                                              width: 140,
-                                              color:
-                                                  Colours.RosePink.withOpacity(
-                                                      .3),
-                                              child: Image.network(
-                                                "${img4}",
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return Center(
-                                                    child: Icon(Icons.image),
-                                                  );
-                                                },
-                                              )),
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () {
-                                                selectImage("img4");
-                                              },
-                                              child: Container(
-                                                color: Colours.RosePink
-                                                    .withOpacity(.7),
-                                                child: Row(
-                                                  children: [
-                                                    Txt(text: "Select image"),
-                                                    Icon(Icons.upload_file),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // ? img 5
-                                    Container(
-                                      height: 180,
-                                      width: 140,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                              height: 130,
-                                              width: 140,
-                                              color:
-                                                  Colours.RosePink.withOpacity(
-                                                      .3),
-                                              child: Image.network(
-                                                "${img5}",
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return Center(
-                                                    child: Icon(Icons.image),
-                                                  );
-                                                },
-                                              )),
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () {
-                                                selectImage("img5");
-                                              },
-                                              child: Container(
-                                                color: Colours.RosePink
-                                                    .withOpacity(.7),
-                                                child: Row(
-                                                  children: [
-                                                    Txt(text: "Select image"),
-                                                    Icon(Icons.upload_file),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(
-                                  height: Sizer.h_10 * 3,
-                                ),
-                                ElevatedButton(
-                                    onPressed: () {
-                                      var nm = prodNM_cont.text.trim();
-                                      var p = price_cont.text.trim();
-                                      var des = desc_cont.text.trim();
-                                      var typ = "";
-                                      if (_character == SingingCharacter.User) {
-                                        setState(() {
-                                          typ = "0";
-                                        });
-                                      } else {
-                                        setState(() {
-                                          typ = "1";
-                                        });
-                                      }
-                                      print("typ == $typ");
-                                      print(nm);
-                                      print(p);
-                                      print(des);
-                                      print(img1);
-                                      print(img2);
-                                      print(img3);
-                                      print(img4);
-                                      print(img5);
-                                      if (nm.isEmpty ||
-                                              p.isEmpty ||
-                                              des.isEmpty ||
-                                              img1.isEmpty
-                                          // ||
-                                          // img2.isEmpty ||
-                                          // img3.isEmpty ||
-                                          // img4.isEmpty ||
-                                          // img5.isEmpty
-                                          ) {
-                                        glb.errorToast(
-                                            context, "Enter all the details");
-                                      } else {
-                                        glb.loading(context);
-                                        print("Enter");
-                                        // var nm = prodNM_cont.text.trim();
-                                        // var p = price_cont.text.trim();
-                                        // var des = desc_cont.text.trim();
-
-                                        add_product(
-                                          img1,
-                                          img2,
-                                          img3,
-                                          img4,
-                                          img5,
-                                          nm,
-                                          p,
-                                          typ,
-                                          des,
-                                        );
-                                      }
-                                    },
-                                    child: Txt(text: "ADD"))
-                              ],
-                            ),
-                          ),
-                        )
-                      : Container(
-                          // color: Colors.blue,
-
-                          child: Padding(
-                            padding: EdgeInsets.all(Sizer.Pad),
-                            child: currentWidth > 600
-                                ? GridView.builder(
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                            childAspectRatio: 1,
-                                            crossAxisCount: 2),
-                                    itemCount:
-                                        glb.Models.adminProducts_lst.length,
-                                    itemBuilder: (context, index) {
-                                      return Products_card(
-                                        filter: "All",
-                                        pm: glb.Models.adminProducts_lst[index],
-                                      );
-                                    })
-                                : ListView.builder(
-                                    itemBuilder: (context, index) {
-                                    return Products_card(
-                                      filter: "All",
-                                      pm: glb.Models.adminProducts_lst[index],
-                                    );
-                                  }),
-                          ),
-                        ),
-                )
-              ],
-            ),
-          )
-        : Container(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  // todo: Add product column
-                  Container(
-                    decoration:
-                        BoxDecoration(border: Border(right: BorderSide())),
-                    // color: Colors.amber,
-                    width: Sizer.w_full / 2.1,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0.sp),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Txt(text: "ADD product"),
-                            Divider(
-                              color: Colours.divider_grey,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(
-                                  width: Sizer.w_50 * 6,
-                                  child: TextField(
-                                    controller: prodNM_cont,
-                                    decoration: InputDecoration(
-                                      hoverColor: Colours.HunyadiYellow,
-                                      labelText: "Product name",
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            Sizer.radius_10 / 5),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: Sizer.w_50 * 6,
-                                  child: TextField(
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(10)
-                                    ],
-                                    controller: price_cont,
-                                    decoration: InputDecoration(
-                                      hoverColor: Colours.HunyadiYellow,
-                                      labelText: "Product price",
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            Sizer.radius_10 / 5),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: Sizer.h_10 * 2,
-                            ),
-                            SizedBox(
-                              width: Sizer.w_50 * 14,
-                              height: 100,
-                              child: TextField(
-                                controller: desc_cont,
-                                decoration: InputDecoration(
-                                  hoverColor: Colours.HunyadiYellow,
-                                  labelText: "Description",
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        Sizer.radius_10 / 5),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Row(
-                              children: <Widget>[
-                                SizedBox(
-                                  width: 200,
-                                  child: ListTile(
-                                    title: const Text('User'),
-                                    leading: Radio<SingingCharacter>(
-                                      value: SingingCharacter.User,
-                                      groupValue: _character,
-                                      onChanged: (SingingCharacter? value) {
-                                        setState(() {
-                                          _character = value;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 200,
-                                  child: ListTile(
-                                    title: const Text('Doctor'),
-                                    leading: Radio<SingingCharacter>(
-                                      value: SingingCharacter.Doctor,
-                                      groupValue: _character,
-                                      onChanged: (SingingCharacter? value) {
-                                        setState(() {
-                                          _character = value;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Wrap(
-                              spacing: 30,
-                              runSpacing: 10,
-                              children: [
-                                Container(
-                                  height: 180,
-                                  width: 140,
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                          height: 130,
-                                          width: 140,
-                                          color:
-                                              Colours.RosePink.withOpacity(.3),
-                                          child: Image.network(
-                                            "${img1}",
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Center(
-                                                child: Icon(Icons.image),
-                                              );
-                                            },
-                                          )),
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            selectImage("img1");
-                                          },
-                                          child: Container(
-                                            color: Colours.RosePink.withOpacity(
-                                                .7),
-                                            child: Row(
-                                              children: [
-                                                Txt(text: "Select image"),
-                                                Icon(Iconsax.document_upload5),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // ? image 2
-                                Container(
-                                  height: 180,
-                                  width: 140,
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                          height: 130,
-                                          width: 140,
-                                          color:
-                                              Colours.RosePink.withOpacity(.3),
-                                          child: Image.network(
-                                            "${img2}",
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Center(
-                                                child: Icon(Icons.image),
-                                              );
-                                            },
-                                          )),
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            selectImage("img2");
-                                          },
-                                          child: Container(
-                                            color: Colours.RosePink.withOpacity(
-                                                .7),
-                                            child: Row(
-                                              children: [
-                                                Txt(text: "Select image"),
-                                                Icon(Iconsax.document_upload5),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // ? image 3
-                                Container(
-                                  height: 180,
-                                  width: 140,
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                          height: 130,
-                                          width: 140,
-                                          color:
-                                              Colours.RosePink.withOpacity(.3),
-                                          child: Image.network(
-                                            "${img3}",
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Center(
-                                                child: Icon(Icons.image),
-                                              );
-                                            },
-                                          )),
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            selectImage("img3");
-                                          },
-                                          child: Container(
-                                            color: Colours.RosePink.withOpacity(
-                                                .7),
-                                            child: Row(
-                                              children: [
-                                                Txt(text: "Select image"),
-                                                Icon(Iconsax.document_upload5),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // ? img 4
-                                Container(
-                                  height: 180,
-                                  width: 140,
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                          height: 130,
-                                          width: 140,
-                                          color:
-                                              Colours.RosePink.withOpacity(.3),
-                                          child: Image.network(
-                                            "${img4}",
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Center(
-                                                child: Icon(Icons.image),
-                                              );
-                                            },
-                                          )),
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            selectImage("img4");
-                                          },
-                                          child: Container(
-                                            color: Colours.RosePink.withOpacity(
-                                                .7),
-                                            child: Row(
-                                              children: [
-                                                Txt(text: "Select image"),
-                                                Icon(Iconsax.document_upload5),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // ? img 5
-                                Container(
-                                  height: 180,
-                                  width: 140,
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                          height: 130,
-                                          width: 140,
-                                          color:
-                                              Colours.RosePink.withOpacity(.3),
-                                          child: Image.network(
-                                            "${img5}",
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Center(
-                                                child: Icon(Icons.image),
-                                              );
-                                            },
-                                          )),
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            selectImage("img5");
-                                          },
-                                          child: Container(
-                                            color: Colours.RosePink.withOpacity(
-                                                .7),
-                                            child: Row(
-                                              children: [
-                                                Txt(text: "Select image"),
-                                                Icon(Iconsax.document_upload5),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: Sizer.h_10 * 3,
-                            ),
-                            ElevatedButton(
-                                onPressed: () {
-                                  var nm = prodNM_cont.text.trim();
-                                  var p = price_cont.text.trim();
-                                  var des = desc_cont.text.trim();
-                                  var typ = "";
-                                  if (_character == SingingCharacter.User) {
-                                    setState(() {
-                                      typ = "0";
-                                    });
-                                  } else {
-                                    setState(() {
-                                      typ = "1";
-                                    });
-                                  }
-                                  print("typ == $typ");
-                                  print(nm);
-                                  print(p);
-                                  print(des);
-                                  print(img1);
-                                  print(img2);
-                                  print(img3);
-                                  print(img4);
-                                  print(img5);
-                                  if (nm.isEmpty ||
-                                          p.isEmpty ||
-                                          des.isEmpty ||
-                                          img1.isEmpty
-                                      // ||
-                                      // img2.isEmpty ||
-                                      // img3.isEmpty ||
-                                      // img4.isEmpty ||
-                                      // img5.isEmpty
-                                      ) {
-                                    glb.errorToast(
-                                        context, "Enter all the details");
-                                  } else {
-                                    glb.loading(context);
-                                    print("Enter");
-                                    // var nm = prodNM_cont.text.trim();
-                                    // var p = price_cont.text.trim();
-                                    // var des = desc_cont.text.trim();
-
-                                    add_product(
-                                      img1,
-                                      img2,
-                                      img3,
-                                      img4,
-                                      img5,
-                                      nm,
-                                      p,
-                                      typ,
-                                      des,
-                                    );
-                                  }
-                                },
-                                child: Txt(text: "ADD"))
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // todo: My products column
-                  Container(
-                    // color: Colors.blue,
-                    width: Sizer.w_full / 2.1,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0.sp),
-                      child: Column(
-                        children: [
-                          Txt(text: "My Products"),
-                          Divider(
-                            color: Colours.divider_grey,
-                          ),
-                          DropdownButton(
-                            value: dropDown_value,
-                            items: list
-                                .map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Txt(
-                                  text: value,
-                                  fontColour: Colours.txt_black,
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                dropDown_value = value!;
-                              });
-                            },
-                          ),
-                          Expanded(
-                              child: GridView.builder(
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                          childAspectRatio: .8,
-                                          crossAxisCount: 3),
-                                  itemCount: dropDown_value == "All"
-                                      ? glb.Models.adminProducts_lst.length
-                                      : dropDown_value == 'User'
-                                          ? admin_user_prod_list.length
-                                          : admin_doc_prod_list.length,
-                                  itemBuilder: (context, index) {
-                                    return dropDown_value == "All"
-                                        ? Products_card(
-                                            pm: glb.Models
-                                                .adminProducts_lst[index],
-                                            filter: dropDown_value,
-                                          )
-                                        : dropDown_value == 'User'
-                                            ? Products_card(
-                                                pm: admin_user_prod_list[index],
-                                                filter: dropDown_value,
-                                              )
-                                            : Products_card(
-                                                pm: admin_doc_prod_list[index],
-                                                filter: dropDown_value,
-                                              );
-                                  })),
-                        ],
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          );
-  }
+  String img1 = "", img2 = "", img3 = "", img4 = "", img5 = "";
+  String dropDown_value = "All";
+  final List<String> list = ['All', 'User', 'Doctor'];
 
   List<myProducts_model> admin_user_prod_list = [];
   List<myProducts_model> admin_doc_prod_list = [];
 
-  seperatrList(List<myProducts_model> lst) {
-    for (int i = 0; i < lst.length; i++) {
-      if (lst[i].typ == '0') {
-        admin_user_prod_list.add(lst[i]);
-      } else {
-        admin_doc_prod_list.add(lst[i]);
-      }
+  bool showAddProduct = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAndSetProducts();
+  }
+
+  Future<void> fetchAndSetProducts() async {
+    try {
+      final products = await fetchProducts();
+      setState(() {
+        glb.Models.adminProducts_lst = products;
+        seperateList(products);
+      });
+    } catch (e) {
+      print("Error fetching products: $e");
     }
   }
 
-  String img1 = "", img2 = "", img3 = "", img4 = "", img5 = "";
+  List<myProducts_model> seperateList(List<myProducts_model> lst) {
+    admin_user_prod_list = lst.where((p) => p.typ == '0').toList();
+    admin_doc_prod_list = lst.where((p) => p.typ == '1').toList();
+    return lst;
+  }
+
+  bool validateForm() {
+    if (prodNM_cont.text.trim().isEmpty ||
+        price_cont.text.trim().isEmpty ||
+        desc_cont.text.trim().isEmpty ||
+        img1.isEmpty) {
+      glb.errorToast(context, "Enter all the details");
+      return false;
+    }
+    return true;
+  }
+
+  void resetForm() {
+    prodNM_cont.clear();
+    price_cont.clear();
+    desc_cont.clear();
+    img1 = img2 = img3 = img4 = img5 = "";
+  }
+
+  Future<Uint8List> getImageBytes(String url) async {
+    final res = await http.get(Uri.parse(url));
+    return res.bodyBytes;
+  }
 
   void selectImage(String typ) {
     final input = FileUploadInputElement()..accept = 'image/*';
-
     input.click();
-
     input.onChange.listen((event) {
       final files = input.files;
-      if (files!.length == 1) {
+      if (files!.isNotEmpty) {
         final file = files[0];
         final reader = FileReader();
-
         reader.onLoad.listen((e) {
           final result = reader.result;
-          if (result is Uint8List) {
+          if (result is Uint8List || result is ByteBuffer) {
             final blob = Blob([result]);
             final imageUrl = Url.createObjectUrlFromBlob(blob);
-            // Use the imageUrl to display the image in an Image widget
-            // or any other way you prefer.
             setState(() {
-              if (typ == 'img1') {
-                img1 = imageUrl;
-              } else if (typ == 'img2') {
-                img2 = imageUrl;
-              } else if (typ == 'img3') {
-                img3 = imageUrl;
-              } else if (typ == 'img4') {
-                img4 = imageUrl;
-              } else if (typ == "img5") {
-                img5 = imageUrl;
+              switch (typ) {
+                case 'img1':
+                  img1 = imageUrl;
+                  break;
+                case 'img2':
+                  img2 = imageUrl;
+                  break;
+                case 'img3':
+                  img3 = imageUrl;
+                  break;
+                case 'img4':
+                  img4 = imageUrl;
+                  break;
+                case 'img5':
+                  img5 = imageUrl;
+                  break;
               }
-              // tempurl = imageUrl;
             });
-            print(imageUrl);
           }
         });
-
         reader.readAsArrayBuffer(file);
       }
     });
   }
 
-  Future<void> add_product(
-    String img,
-    String img2,
-    String img3,
-    String img4,
-    String img5,
-    String name,
-    String price,
-    String typ,
-    String desc,
-  ) async {
-    print("sending doc img");
-    print("img 1 = $img");
-    print("img 2 = $img2");
-    print("img 3 = $img3");
-    print("img 4 = $img4");
-    print("img 5 = $img5");
+  Future<void> addProduct() async {
+    if (!validateForm()) return;
+    glb.loading(context);
 
+    final name = prodNM_cont.text.trim();
+    final price = price_cont.text.trim();
+    final desc = desc_cont.text.trim();
+    final type = _character == SingingCharacter.User ? "0" : "1";
     final url = glb.API.baseURL + glb.API.add_admin_products;
+    final images = [img1, img2, img3, img4, img5];
 
-    final file = img;
-    final response = await http.get(Uri.parse(file));
-    final Uint8List imageData = response.bodyBytes;
+    final request = http.MultipartRequest('POST', Uri.parse(url));
 
-    final file2 = img2;
-    final response2 = await http.get(Uri.parse(file2));
-    final Uint8List imageData2 = response2.bodyBytes;
-
-    final file3 = img3;
-    final response3 = await http.get(Uri.parse(file3));
-    final Uint8List imageData3 = response3.bodyBytes;
-
-    final file4 = img4;
-    final response4 = await http.get(Uri.parse(file4));
-    final Uint8List imageData4 = response4.bodyBytes;
-
-    final file5 = img5;
-    final response5 = await http.get(Uri.parse(file5));
-    final Uint8List imageData5 = response5.bodyBytes;
-
-    var request = http.MultipartRequest('POST', Uri.parse(url));
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'image',
+    for (int i = 0; i < images.length; i++) {
+      final imageData = await getImageBytes(images[i]);
+      final fieldName = i == 0 ? 'image' : 'img${i + 1}';
+      request.files.add(http.MultipartFile.fromBytes(
+        fieldName,
         imageData,
-        filename: "${name}.jpg",
-        // filename: 'kittens.png',
-      ),
-    );
+        filename: "${name}_${i + 1}.jpg",
+      ));
+    }
 
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'img2',
-        imageData2,
-        filename: "${name}_2.jpg",
-        // filename: 'kittens.png',
-      ),
-    );
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'img3',
-        imageData3,
-        filename: "${name}_3.jpg",
-        // filename: 'kittens.png',
-      ),
-    );
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'img4',
-        imageData4,
-        filename: "${name}_4.jpg",
-        // filename: 'kittens.png',
-      ),
-    );
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'img5',
-        imageData5,
-        filename: "${name}_5.jpg",
-        // filename: 'kittens.png',
-      ),
-    );
     request.fields['product_name'] = name;
     request.fields['price'] = price;
-    request.fields['type'] = typ;
+    request.fields['type'] = type;
     request.fields['description'] = desc;
 
-    print("sending img 2");
     try {
-      print("try");
-      final res = await request.send();
-      print("res = ${res.statusCode}");
-
-      print(res.headersSplitValues);
-
-      if (res.statusCode == 200) {
-        setState(() {
-          Navigator.pop(context);
-          glb.SuccessToast(context, "Product added successfully");
-          prodNM_cont.clear();
-          price_cont.clear();
-          desc_cont.clear();
-          img = "";
-          GetAdminProducts_async();
-        });
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        Navigator.pop(context);
+        glb.SuccessToast(context, "Product added successfully");
+        resetForm();
+        await fetchAndSetProducts();
       } else {
-        setState(() {});
+        Navigator.pop(context);
+        glb.errorToast(context, "Failed to add product");
       }
     } catch (e) {
-      print("catch");
-      print(e);
-      setState(() {});
+      Navigator.pop(context);
+      print("Upload error: $e");
     }
   }
 
-  List<myProducts_model> pm = [];
-  GetAdminProducts_async() async {
-    pm = [];
+  Future<List<myProducts_model>> fetchProducts() async {
+    final url = Uri.parse(glb.API.baseURL + glb.API.GetAdminProducts);
+    final res = await http.get(url);
+    print(res.body);
+    if (res.statusCode != 200) throw Exception("Failed to fetch products");
+    print("Fetching products from API");
+    final List data = jsonDecode(res.body);
+    return data
+        .map((item) => myProducts_model(
+              ID: item['id'].toString(),
+              name: item['product_name'].toString(),
+              price: item['price'].toString(),
+              desc: item['Description'].toString(),
+              typ: item['type'].toString(),
+              img: "${glb.API.baseURL}images/admin_pharmacy/${item['image']}",
+              img2: "${glb.API.baseURL}images/admin_pharmacy/${item['img2']}",
+              img3: "${glb.API.baseURL}images/admin_pharmacy/${item['img3']}",
+              img4: "${glb.API.baseURL}images/admin_pharmacy/${item['img4']}",
+              img5: "${glb.API.baseURL}images/admin_pharmacy/${item['img5']}",
+            ))
+        .toList();
+  }
 
-    print("get admin prod ");
-    Uri url = Uri.parse(glb.API.baseURL + glb.API.GetAdminProducts);
-    print(url);
-    try {
-      var res = await http.get(url);
-      print(res.statusCode);
-      var bdy = jsonDecode(res.body);
-      List b = jsonDecode(res.body);
-      print(bdy);
-      print(b.length);
-      print("nulled img");
-      print(bdy[0]["img2"].toString());
-      for (int i = 0; i < b.length; i++) {
-        pm.add(
-          myProducts_model(
-              ID: bdy[i]['id'].toString(),
-              name: bdy[i]['product_name'].toString(),
-              price: bdy[i]['price'].toString(),
-              img: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['image'].toString(),
-              img2: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img2'].toString(),
-              img3: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img3'].toString(),
-              img4: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img4'].toString(),
-              img5: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img5'].toString(),
-              desc: bdy[i]['Description'].toString(),
-              typ: bdy[i]['type'].toString()),
-        );
-      }
-      setState(() {
-        glb.Models.adminProducts_lst = pm;
-      });
-    } catch (e) {
-      print("Exception => $e");
-    }
+  @override
+  Widget build(BuildContext context) {
+    bool isMobile = MediaQuery.of(context).size.width < 600;
+    return Scaffold(
+      body: Padding(
+        padding: EdgeInsets.all(16.0.sp),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Txt(text: showAddProduct ? "Add Product" : "My Products"),
+                Switch(
+                  value: showAddProduct,
+                  onChanged: (val) => setState(() => showAddProduct = val),
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+            Divider(),
+            Expanded(
+              child: showAddProduct
+                  ? SingleChildScrollView(child: buildAddProductCard())
+                  : SingleChildScrollView(child: buildProductListCard()),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildAddProductCard() {
+    final imageUrls = [img1, img2, img3, img4, img5];
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            buildFormField("Product Name", prodNM_cont),
+            buildFormField("Price", price_cont),
+            buildFormField("Description", desc_cont),
+            Row(
+              children: [
+                Radio<SingingCharacter>(
+                  value: SingingCharacter.User,
+                  groupValue: _character,
+                  onChanged: (val) => setState(() => _character = val),
+                ),
+                Text("User"),
+                Radio<SingingCharacter>(
+                  value: SingingCharacter.Doctor,
+                  groupValue: _character,
+                  onChanged: (val) => setState(() => _character = val),
+                ),
+                Text("Doctor"),
+              ],
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(5, (index) {
+                final label = 'img${index + 1}';
+                final url = imageUrls[index];
+                return Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => selectImage(label),
+                      child: Text("Upload $label"),
+                    ),
+                    if (url.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Image.network(url, width: 80, height: 80),
+                      )
+                  ],
+                );
+              }),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(onPressed: addProduct, child: Txt(text: "ADD")),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildProductListCard() {
+    final filteredList = dropDown_value == "All"
+        ? glb.Models.adminProducts_lst
+        : dropDown_value == "User"
+            ? admin_user_prod_list
+            : admin_doc_prod_list;
+
+    final searchQuery = searchController.text.toLowerCase();
+    final searchedList = filteredList
+        .where((p) => p.name.toLowerCase().contains(searchQuery))
+        .toList();
+
+    bool isMobile = MediaQuery.of(context).size.width < 600;
+
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButton<String>(
+              value: dropDown_value,
+              items: list
+                  .map((val) => DropdownMenuItem(
+                        value: val,
+                        child: Text(val),
+                      ))
+                  .toList(),
+              onChanged: (val) => setState(() => dropDown_value = val!),
+            ),
+            SizedBox(height: 8),
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                labelText: "Search Products",
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            SizedBox(height: 8),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: searchedList.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isMobile ? 2 : 4,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1,
+              ),
+              itemBuilder: (context, index) => Products_card(
+                pm: searchedList[index],
+                filter: dropDown_value,
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildFormField(String label, TextEditingController controller) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+      ),
+    );
   }
 }

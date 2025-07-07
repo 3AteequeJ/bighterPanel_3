@@ -9,6 +9,7 @@ class AllordersModel {
   late String user_email;
   late String payment_id;
   late String total;
+  late String status;
   AllordersModel({
     required this.orderId,
     required this.user_id,
@@ -20,5 +21,6 @@ class AllordersModel {
     required this.user_email,
     required this.payment_id,
     required this.total,
+    required this.status,
   });
 }

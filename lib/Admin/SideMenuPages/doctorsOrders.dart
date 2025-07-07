@@ -9,63 +9,56 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:responsive_sizer/responsive_sizer.dart';
 
-class OrdersScrn extends StatefulWidget {
-  const OrdersScrn({super.key});
+class DocOrdersScrn extends StatefulWidget {
+  const DocOrdersScrn({super.key});
 
   @override
-  State<OrdersScrn> createState() => _OrdersScrnState();
+  State<DocOrdersScrn> createState() => _DocOrdersScrnState();
 }
 
-class _OrdersScrnState extends State<OrdersScrn> {
+class _DocOrdersScrnState extends State<DocOrdersScrn> {
   List<AllordersModel> orders = [];
   List<AllordersModel> filteredOrders = [];
   TextEditingController searchController = TextEditingController();
 
+  List<String> orderTypes = ['New orders', 'Shipped', 'delivered'];
+  late String dropdownValue;
   @override
   void initState() {
     super.initState();
     dropdownValue = orderTypes.first;
+
     getOrders('-1');
   }
 
   void getOrders(String type) async {
-    print("Fetching orders...");
-    Uri url = glb.usrTyp == '0'
-        ? Uri.parse(glb.API.baseURL + glb.API.getAllOrders)
-        : Uri.parse(glb.API.baseURL + glb.API.getDocOrders);
+    Uri url = Uri.parse(glb.API.baseURL + glb.API.Admin_getDocOrdersummary);
 
-    var res = glb.usrTyp == '0'
-        ? await http.post(url, body: {'type': type})
-        : await http.post(url, body: {
-            "doc_id": glb.usrTyp == '1'
-                ? glb.doctor.doc_id
-                : glb.clinicBranchDoc.doc_id,
-            "branch_doc": glb.usrTyp == '1' ? '0' : '1',
-          });
-    print(res.statusCode);
-    print("Response status: ${res.body}");
+    var res = await http.post(url, body: {
+      "type": type,
+    });
+
     if (res.statusCode == 200) {
       orders.clear();
       var data = jsonDecode(res.body);
-      print(res.body);
       for (var i in data) {
         AllordersModel order = AllordersModel(
           orderId: i['id'].toString(),
-          user_id: i['user_id'].toString(),
-          order_date: glb.usrTyp == '0'
-              ? i['order_datetime'].toString()
-              : i['date_time'].toString(),
-          user_name: glb.usrTyp == '0'
-              ? i['user_name'].toString()
-              : i['name'].toString(),
+          user_id: i['doc_id'].toString(),
+          order_date: i['date_time'].toString(),
+          user_name: i['doctor_name'].toString(),
           payment_id: i['payment_id'].toString(),
           total: i['total_amount'].toString(),
-          user_image: glb.API.baseURL +
-              "public/images/user_images/" +
-              i['user_img'].toString(),
+          user_image: i['branch_doc'].toString() == '0'
+              ? (glb.API.baseURL +
+                  "public/images/doctor_images/" +
+                  i['user_img'].toString())
+              : (glb.API.baseURL +
+                  "public/images/branchDoc_images/" +
+                  i['user_img'].toString()),
           user_address: i['address'].toString().replaceAll("///", ", "),
-          user_mobno: i['mobile_no'].toString(),
-          user_email: i['email_id'].toString(),
+          user_mobno: i['mob_no'].toString(),
+          user_email: i['email'].toString(),
           status: i['status'].toString(),
         );
         orders.add(order);
@@ -86,8 +79,6 @@ class _OrdersScrnState extends State<OrdersScrn> {
     });
   }
 
-  late String dropdownValue;
-  List<String> orderTypes = ['New orders', 'Shipped', 'delivered'];
   @override
   Widget build(BuildContext context) {
     var currentWidth = MediaQuery.of(context).size.width;
@@ -155,7 +146,10 @@ class _OrdersScrnState extends State<OrdersScrn> {
                       crossAxisSpacing: 10,
                     ),
                     itemBuilder: (context, index) {
-                      return OrdersCard(order: filteredOrders[index]);
+                      return OrdersCard(
+                        order: filteredOrders[index],
+                        userOrder: false,
+                      );
                     },
                   ),
           ),

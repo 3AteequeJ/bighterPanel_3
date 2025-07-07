@@ -8,6 +8,7 @@ import 'package:bighter_panel/Admin/Models/myProducts.dart';
 import 'package:bighter_panel/Admin/SideMenuPages/doctors/unverifiedDoctors/UnverifiedDocs_pg.dart';
 import 'package:bighter_panel/Admin/Pharmacy/UserPharmacy/NewUserPharmacy.dart';
 import 'package:bighter_panel/Admin/SideMenuPages/Clinic_pages/clinics.dart';
+import 'package:bighter_panel/Admin/SideMenuPages/doctorsOrders.dart';
 import 'package:bighter_panel/Admin/SideMenuPages/pricing_page.dart';
 import 'package:bighter_panel/Admin/docProducts.dart';
 import 'package:bighter_panel/Admin/SideMenuPages/doctors/VerifiedDoctors/doctors.dart';
@@ -16,6 +17,7 @@ import 'package:bighter_panel/Admin/usersPhar.dart';
 import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/sizer.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
+import 'package:bighter_panel/doctor/orders_scrn.dart';
 import 'package:bighter_panel/models/AllClinics_model.dart';
 import 'package:bighter_panel/models/AllDoc_model.dart';
 import 'package:bighter_panel/models/Appointments_model.dart';
@@ -48,10 +50,10 @@ class _adminHome_pgState extends State<adminHome_pg> {
   List pages_lst = [
     Main_pg(),
     allDocs_pg(),
-    allClinics(),
+    AllClinics(),
     UnverifiedDoctors_pg(),
     newUserPharmacy(),
-    docProducts_scrn(),
+    DocProductsScreen(),
     AllAppointments(),
   ];
   void initState() {
@@ -394,6 +396,26 @@ class _adminHome_pgState extends State<adminHome_pg> {
                       ),
                     ),
                     SideMenuItem(
+                      title: 'User Orders',
+                      onTap: (index, _) {
+                        sideMenu.changePage(index);
+                      },
+                      icon: const Icon(
+                        Icons.takeout_dining,
+                        color: Colours.icn_white,
+                      ),
+                    ),
+                    SideMenuItem(
+                      title: 'Doctors Orders',
+                      onTap: (index, _) {
+                        sideMenu.changePage(index);
+                      },
+                      icon: const Icon(
+                        Icons.takeout_dining_outlined,
+                        color: Colours.icn_white,
+                      ),
+                    ),
+                    SideMenuItem(
                       builder: (context, displayMode) {
                         return const Divider(
                           endIndent: 8,
@@ -444,13 +466,16 @@ class _adminHome_pgState extends State<adminHome_pg> {
                   children: [
                     Main_pg(),
                     allDocs_pg(),
-                    allClinics(),
+                    AllClinics(),
                     UnverifiedDoctors_pg(),
                     // usersPharm(),
                     newUserPharmacy(),
-                    docProducts_scrn(),
+                    DocProductsScreen(),
                     AllAppointments(),
                     Pricing_pg(),
+                    OrdersScrn(),
+                    DocOrdersScrn(),
+
                     // Container(
                     //   color: Colors.white,
                     //   child: const Center(

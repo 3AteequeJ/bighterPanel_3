@@ -26,7 +26,11 @@ class _AllDocs_cardState extends State<AllDocs_card> {
       child: Padding(
         padding: EdgeInsets.all(14.sp),
         child: Container(
+          width: 20.w,
+          height: currentWidth <= 600 ? 10.h : 5.55.h,
+
           decoration: BoxDecoration(
+            color: Colors.red,
             border: Border(
               bottom: BorderSide(
                 color: Colours.divider_grey,
@@ -38,7 +42,8 @@ class _AllDocs_cardState extends State<AllDocs_card> {
                       : Colours.green),
             ),
           ),
-          child: Padding(
+          child:
+          Padding(
             padding: EdgeInsets.all(7.sp),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -109,6 +114,5 @@ class _AllDocs_cardState extends State<AllDocs_card> {
         ),
       ),
     );
-    ;
   }
 }

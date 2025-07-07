@@ -3,12 +3,10 @@ import 'dart:convert';
 import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/sizer.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:http/http.dart' as http;
+import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
 
 class Pricing_pg extends StatefulWidget {
@@ -18,44 +16,107 @@ class Pricing_pg extends StatefulWidget {
   State<Pricing_pg> createState() => _Pricing_pgState();
 }
 
-List<String> apply_lst = [
-  'Both',
-  'price only',
-  'comission only',
-];
-
-String dropdown_value = apply_lst.first;
-
 class _Pricing_pgState extends State<Pricing_pg> {
-  TextEditingController price_cont = TextEditingController();
-  TextEditingController comission_cont = TextEditingController();
-  TextEditingController w_s1 = TextEditingController();
-  TextEditingController w_s2 = TextEditingController();
-  TextEditingController w_s3 = TextEditingController();
-  TextEditingController m_s1 = TextEditingController();
-  TextEditingController m_s2 = TextEditingController();
-  TextEditingController m_s3 = TextEditingController();
+  final List<String> applyLst = ['Both', 'price only', 'comission only'];
+  late String dropdownValue;
+
+  final priceCont = TextEditingController();
+  final comissionCont = TextEditingController();
+
+  final wSlots = List.generate(3, (_) => TextEditingController());
+  final mSlots = List.generate(3, (_) => TextEditingController());
 
   @override
   void initState() {
-    // TODO: implement initState
-    setState(() {
-      price_cont.text = glb.pharmacyPricing.price;
-      comission_cont.text = glb.pharmacyPricing.comission;
-      w_s1.text = glb.ProfilePrioritization_pricing.s1_w;
-      w_s2.text = glb.ProfilePrioritization_pricing.s2_w;
-      w_s3.text = glb.ProfilePrioritization_pricing.s3_w;
-      m_s1.text = glb.ProfilePrioritization_pricing.s1_m;
-      m_s2.text = glb.ProfilePrioritization_pricing.s2_m;
-      m_s3.text = glb.ProfilePrioritization_pricing.s3_m;
-      if (glb.pharmacyPricing.applicable == '0') {
-        dropdown_value = apply_lst.first;
-      } else if (glb.pharmacyPricing.applicable == '1') {
-        dropdown_value = apply_lst[1];
-      } else {
-        dropdown_value = apply_lst[2];
-      }
-    });
+    super.initState();
+    priceCont.text = glb.pharmacyPricing.price;
+    comissionCont.text = glb.pharmacyPricing.comission;
+    wSlots[0].text = glb.ProfilePrioritization_pricing.s1_w;
+    wSlots[1].text = glb.ProfilePrioritization_pricing.s2_w;
+    wSlots[2].text = glb.ProfilePrioritization_pricing.s3_w;
+    mSlots[0].text = glb.ProfilePrioritization_pricing.s1_m;
+    mSlots[1].text = glb.ProfilePrioritization_pricing.s2_m;
+    mSlots[2].text = glb.ProfilePrioritization_pricing.s3_m;
+
+    dropdownValue = applyLst[int.tryParse(glb.pharmacyPricing.applicable) ?? 0];
+  }
+
+  Widget buildTextField(String label, TextEditingController controller,
+      {String prefix = '', List<TextInputFormatter>? inputFormatters}) {
+    return Container(
+      height: Sizer.h_50,
+      width: Sizer.w_50 * 6,
+      child: Row(
+        children: [
+          Txt(text: "$label "),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              inputFormatters: inputFormatters,
+              decoration: InputDecoration(
+                prefixText: prefix,
+                border: OutlineInputBorder(),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget buildDropdown() {
+    return Container(
+      height: Sizer.h_50,
+      width: Sizer.w_50 * 6,
+      child: Row(
+        children: [
+          Txt(text: "Apply "),
+          DropdownButton<String>(
+            value: dropdownValue,
+            items: applyLst.map((value) {
+              return DropdownMenuItem(
+                value: value,
+                child: Txt(text: value, fontColour: Colours.txt_black),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                dropdownValue = value!;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSlotInputs(
+      String label, List<TextEditingController> controllers) {
+    return Column(
+      children: [
+        Txt(text: label, fntWt: FontWeight.bold),
+        for (int i = 0; i < controllers.length; i++)
+          Padding(
+            padding: EdgeInsets.only(top: Sizer.h_10),
+            child: Row(
+              children: [
+                Txt(text: "Slot ${i + 1}"),
+                SizedBox(width: Sizer.w_20),
+                SizedBox(
+                  width: Sizer.w_50 * 2,
+                  child: TextField(
+                    controller: controllers[i],
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      prefixText: "₹",
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -63,323 +124,123 @@ class _Pricing_pgState extends State<Pricing_pg> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Material(
-          elevation: 5,
-          color: Colors.transparent,
-          child: Container(
-            // height: Sizer.h_50 * 4,
-            width: 70.w,
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(Sizer.Pad),
-              child: Column(
-                children: [
-                  Txt(
-                    text: "Pharmacy pricing",
-                    fntWt: FontWeight.bold,
-                  ),
-                  Divider(
-                    color: Colours.divider_grey,
-                  ),
-                  Wrap(
-                    spacing: Sizer.w_20,
-                    children: [
-                      Container(
-                        height: Sizer.h_50,
-                        width: Sizer.w_50 * 6,
-                        child: Row(
-                          children: [
-                            Txt(text: "Price/month "),
-                            Expanded(
-                              child: TextField(
-                                controller: price_cont,
-                                decoration: InputDecoration(
-                                  prefixText: "₹",
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      Container(
-                        height: Sizer.h_50,
-                        width: Sizer.w_50 * 6,
-                        child: Row(
-                          children: [
-                            Txt(text: "Comission "),
-                            Expanded(
-                              child: TextField(
-                                controller: comission_cont,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                decoration: InputDecoration(
-                                  prefixText: "%",
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      Container(
-                        height: Sizer.h_50,
-                        width: Sizer.w_50 * 6,
-                        child: Row(
-                          children: [
-                            Txt(text: "Apply "),
-                            DropdownButton(
-                                value: dropdown_value,
-                                items: apply_lst.map<DropdownMenuItem<String>>(
-                                    (String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Txt(
-                                      text: value,
-                                      fontColour: Colours.txt_black,
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    dropdown_value = value!;
-                                  });
-                                })
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        String a = '';
-                        //                     'Both',
-                        // 'price only',
-                        // 'comission only',
-                        if (dropdown_value == 'Both') {
-                          a = '0';
-                        } else if (dropdown_value == 'price only') {
-                          a = '1';
-                        } else {
-                          a = '2';
-                        }
-                        updatePharmPrice_async(
-                            price_cont.text, comission_cont.text, a);
-                      },
-                      child: Txt(text: "Update"),
-                    ),
-                  )
-                ],
+        _buildSectionCard(
+          title: "Pharmacy pricing",
+          children: [
+            Wrap(
+              spacing: Sizer.w_20,
+              children: [
+                buildTextField("Price/month", priceCont, prefix: "₹"),
+                buildTextField("Commission", comissionCont,
+                    prefix: "%",
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
+                buildDropdown(),
+              ],
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: _handlePharmacyUpdate,
+                child: Txt(text: "Update"),
               ),
             ),
-          ),
+          ],
         ),
-        SizedBox(
-          height: Sizer.h_50,
-        ),
-        Material(
-          elevation: 5,
-          color: Colors.transparent,
-          child: Container(
-            // height: Sizer.h_50 * 4,
-            width: 70.w,
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(Sizer.Pad),
-              child: Column(
-                children: [
-                  Txt(
-                    text: "Profile prioritization pricing",
-                    fntWt: FontWeight.bold,
-                  ),
-                  Divider(
-                    color: Colours.divider_grey,
-                  ),
-                  Row(
-                    // spacing: Sizer.w_20,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        children: [
-                          Txt(
-                            text: "Week",
-                            fntWt: FontWeight.bold,
-                          ),
-                          Row(
-                            children: [
-                              Txt(text: "Slot 1"),
-                              SizedBox(
-                                width: Sizer.w_20,
-                              ),
-                              SizedBox(
-                                width: Sizer.w_50 * 2,
-                                child: TextField(
-                                  controller: w_s1,
-                                  decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      prefixText: "₹"),
-                                ),
-                              )
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Txt(text: "Slot 2"),
-                              SizedBox(
-                                width: Sizer.w_20,
-                              ),
-                              SizedBox(
-                                width: Sizer.w_50 * 2,
-                                child: TextField(
-                                  controller: w_s2,
-                                  decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      prefixText: "₹"),
-                                ),
-                              )
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Txt(text: "Slot 3"),
-                              SizedBox(
-                                width: Sizer.w_20,
-                              ),
-                              SizedBox(
-                                width: Sizer.w_50 * 2,
-                                child: TextField(
-                                  controller: w_s3,
-                                  decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      prefixText: "₹"),
-                                ),
-                              )
-                            ],
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          Txt(
-                            text: "Month",
-                            fntWt: FontWeight.bold,
-                          ),
-                          Row(
-                            children: [
-                              Txt(text: "Slot 1"),
-                              SizedBox(
-                                width: Sizer.w_20,
-                              ),
-                              SizedBox(
-                                width: Sizer.w_50 * 2,
-                                child: TextField(
-                                  controller: m_s1,
-                                  decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      prefixText: "₹"),
-                                ),
-                              )
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Txt(text: "Slot 2"),
-                              SizedBox(
-                                width: Sizer.w_20,
-                              ),
-                              SizedBox(
-                                width: Sizer.w_50 * 2,
-                                child: TextField(
-                                  controller: m_s2,
-                                  decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      prefixText: "₹"),
-                                ),
-                              )
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Txt(text: "Slot 3"),
-                              SizedBox(
-                                width: Sizer.w_20,
-                              ),
-                              SizedBox(
-                                width: Sizer.w_50 * 2,
-                                child: TextField(
-                                  controller: m_s3,
-                                  decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      prefixText: "₹"),
-                                ),
-                              )
-                            ],
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                  ElevatedButton(
-                      onPressed: () {
-                        var p1 = w_s1.text.trim();
-                        var p2 = w_s2.text.trim();
-                        var p3 = w_s3.text.trim();
-                        var p4 = m_s1.text.trim();
-                        var p5 = m_s2.text.trim();
-                        var p6 = m_s3.text.trim();
-
-                        updateProfilePrioritizationPrice_async(
-                            p1, p2, p3, p4, p5, p6);
-                      },
-                      child: Txt(text: "Update"))
-                ],
-              ),
+        SizedBox(height: Sizer.h_50),
+        _buildSectionCard(
+          title: "Profile prioritization pricing",
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                buildSlotInputs("Week", wSlots),
+                buildSlotInputs("Month", mSlots),
+              ],
             ),
-          ),
+            SizedBox(height: Sizer.h_10 * 2),
+            ElevatedButton(
+              onPressed: _handleProfilePrioritizationUpdate,
+              child: Txt(text: "Update"),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  updatePharmPrice_async(
-      String price, String Commission, String applicable) async {
-    print("updating pharm price");
-    Uri url = Uri.parse(glb.API.baseURL + glb.API.updatePharmPrice);
+  Widget _buildSectionCard(
+      {required String title, required List<Widget> children}) {
+    return Material(
+      elevation: 5,
+      color: Colors.transparent,
+      child: Container(
+        width: 70.w,
+        color: Colors.white,
+        padding: EdgeInsets.all(Sizer.Pad),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Txt(text: title, fntWt: FontWeight.bold),
+            Divider(color: Colours.divider_grey),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
 
+  void _handlePharmacyUpdate() async {
+    final applicable = {
+      'Both': '0',
+      'price only': '1',
+      'comission only': '2',
+    }[dropdownValue]!;
+
+    await _updatePharmPrice(
+        priceCont.text.trim(), comissionCont.text.trim(), applicable);
+  }
+
+  void _handleProfilePrioritizationUpdate() async {
+    await _updateProfilePrioritizationPrice(
+      wSlots[0].text.trim(),
+      wSlots[1].text.trim(),
+      wSlots[2].text.trim(),
+      mSlots[0].text.trim(),
+      mSlots[1].text.trim(),
+      mSlots[2].text.trim(),
+    );
+  }
+
+  Future<void> _updatePharmPrice(
+      String price, String commission, String applicable) async {
     try {
-      var res = await http.post(url, body: {
+      final url = Uri.parse("${glb.API.baseURL}${glb.API.updatePharmPrice}");
+      final res = await http.post(url, body: {
         'price': price,
-        'commission': Commission,
+        'commission': commission,
         'applicable': applicable,
       });
 
-      print(res.body);
-      var bdy = jsonDecode(res.body);
-
-      print("bdy = $bdy");
+      final bdy = jsonDecode(res.body);
       if (bdy.toString() == '1') {
-        print("here");
         glb.SuccessToast(context, "Pharmacy price updated");
         setState(() {
           glb.pharmacyPricing.price = price;
-          glb.pharmacyPricing.comission = Commission;
+          glb.pharmacyPricing.comission = commission;
           glb.pharmacyPricing.applicable = applicable;
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("Error updating pharmacy price: $e");
+    }
   }
 
-  updateProfilePrioritizationPrice_async(
+  Future<void> _updateProfilePrioritizationPrice(
       String p1, String p2, String p3, String p4, String p5, String p6) async {
-    print("updating prioritization price");
-    Uri url =
-        Uri.parse(glb.API.baseURL + glb.API.updateProfileProritizationPrice);
-
     try {
-      var res = await http.post(url, body: {
+      final url = Uri.parse(
+          "${glb.API.baseURL}${glb.API.updateProfileProritizationPrice}");
+      final res = await http.post(url, body: {
         '1s_w': p1,
         '2s_w': p2,
         '3s_w': p3,
@@ -388,12 +249,8 @@ class _Pricing_pgState extends State<Pricing_pg> {
         '3s_m': p6,
       });
 
-      print(res.body);
-      var bdy = jsonDecode(res.body);
-
-      print("bdy = $bdy");
+      final bdy = jsonDecode(res.body);
       if (bdy.toString() == '1') {
-        print("here");
         glb.SuccessToast(context, "Profile prioritization price updated");
         setState(() {
           glb.ProfilePrioritization_pricing.s1_w = p1;
@@ -404,6 +261,8 @@ class _Pricing_pgState extends State<Pricing_pg> {
           glb.ProfilePrioritization_pricing.s3_m = p6;
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("Error updating profile prioritization price: $e");
+    }
   }
 }

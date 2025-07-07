@@ -441,10 +441,8 @@ class _UnverifiedDocDetState extends State<UnverifiedDocDet> {
                               children: [
                                 CircleAvatar(
                                   radius: 50,
-                                  backgroundImage: NetworkImage(
-                                      scale: CircularProgressIndicator
-                                          .strokeAlignInside,
-                                      "${widget.doc_img}"),
+                                  backgroundImage:
+                                      NetworkImage("${widget.doc_img}"),
                                   backgroundColor: Colours.HunyadiYellow,
                                   // child: Image.network(
                                   //   "${widget.doc_img}",

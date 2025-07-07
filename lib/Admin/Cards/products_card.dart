@@ -1,32 +1,27 @@
-import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:bighter_panel/Admin/Home_pg.dart';
 import 'package:bighter_panel/Admin/Models/myProducts.dart';
 import 'package:bighter_panel/Admin/Pharmacy/editProduct.dart';
 import 'package:bighter_panel/Utilities/colours.dart';
-import 'package:bighter_panel/Utilities/sizer.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
-import 'package:bighter_panel/doctor/docHome_pg.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
+import 'package:bighter_panel/doctor/docHome_pg.dart' show DocHome_pg;
+import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+
 import 'package:http/http.dart' as http;
-import 'package:bighter_panel/Admin/Pharmacy/UserPharmacy/NewUserPharmacy.dart'
-    as nup;
 
 class Products_card extends StatefulWidget {
+  final myProducts_model pm;
+  final String filter;
+
   const Products_card({
-    super.key,
+    Key? key,
     required this.pm,
     required this.filter,
-  });
-  final myProducts_model pm;
-  final filter;
+  }) : super(key: key);
+
   @override
   State<Products_card> createState() => _Products_cardState();
 }
@@ -34,134 +29,85 @@ class Products_card extends StatefulWidget {
 class _Products_cardState extends State<Products_card> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(8.0.sp),
-      child: Container(
-        height: 300,
-        // width: 100,
-    
-        decoration: BoxDecoration(
-            // color: Colors.red,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all()),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Align(
-            //   alignment: Alignment.centerRight,
-            //   child: InkWell(
-            //       onTap: () {
-            //         glb.loading(context);
-            //         del_admin_prod_async();
-            //       },
-            //       child: CircleAvatar(
-            //         backgroundColor: Colours.Red,
-            //         radius: Sizer.h_10 * 2,
-            //         child: Center(child: Icon(Icons.remove)),
-            //       )),
-            // ),
-            // ElevatedButton(
-            //     style: ElevatedButton.styleFrom(backgroundColor: Colours.Red),
-            //     onPressed: () {
-            //       glb.loading(context);
-            //       del_admin_prod_async();
-            //     },
-            //     child: Icon(Icons.remove)),
-            Container(
-              height: 100,
-              // width: 100,.
-              width: double.maxFinite,
-              decoration: BoxDecoration(border: Border(bottom: BorderSide())),
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
               child: Image.network(
-                widget.pm.img + "?cache_bust=${Random().nextInt(10000)}",
+                widget.pm.img,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Icon(Icons.broken_image),
               ),
             ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                  // width: double.maxFinite,
-                  // decoration: BoxDecoration(
-                  //   border: Border(bottom: BorderSide()),
-    
-                  // ),
-                  child: Padding(
-                padding: EdgeInsets.all(8.0.sp),
-                child: Txt(
+          ),
+          Padding(
+            padding: EdgeInsets.all(8.0.sp),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Txt(
                   text: widget.pm.name,
+                  size: 14.sp,
                   fntWt: FontWeight.bold,
-                  size: 16,
+                  maxLn: 1,
                 ),
-              )),
+                Txt(
+                  text: "₹${widget.pm.price}",
+                  size: 14.sp,
+                  fontColour: Colours.green,
+                  fntWt: FontWeight.w600,
+                ),
+                Txt(
+                  text: widget.pm.desc.length > 50
+                      ? widget.pm.desc.substring(0, 50) + "..."
+                      : widget.pm.desc,
+                  size: 12.sp,
+                  fontColour: Colors.grey.shade600,
+                  maxLn: 2,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        glb.ConfirmationBox(
+                            context, "you want to delete this Product?", () {
+                          deleteProduct();
+                        });
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.blue[800]),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditProduct(
+                              product: widget.pm,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                )
+              ],
             ),
-            Container(
-                width: double.maxFinite,
-                decoration: BoxDecoration(
-                  color: Colours.nonPhoto_blue.withOpacity(0.5),
-                  // border: Border.all(),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(8.0.sp),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // InkWell(
-                      //   onTap: () {
-                      //     glb.ConfirmationBox(context,
-                      //         "Are you sure you want to delete this product?",
-                      //         () {
-                      //       del_admin_prod_async();
-                      //     });
-                      //   },
-                      //   child: Container(
-                      //       color: Colours.Red,
-                      //       child: Padding(
-                      //         padding: EdgeInsets.all(8.0.sp),
-                      //         child: Icon(Iconsax.trash),
-                      //       )),
-                      // ),
-                      Txt(text: "₹ " + widget.pm.price),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colours.Red,
-                                  shape: CircleBorder()),
-                              onPressed: () {
-                                glb.ConfirmationBox(context,
-                                    "You want to delete this product? ", () {
-                                  glb.loading(context);
-                                  del_admin_prod_async();
-                                });
-                              },
-                              child: Icon(
-                                Icons.remove,
-                                color: const Color.fromRGBO(255, 255, 240, 1),
-                              )),
-                          ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditProduct(Product_id: widget.pm.ID),
-                                  ),
-                                );
-                              },
-                              child: Txt(text: "Edit")),
-                        ],
-                      )
-                    ],
-                  ),
-                )),
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
 
-  del_admin_prod_async() async {
+  deleteProduct() async {
     // String url = glb.API.baseURL+ "DelAdminProd";
     Uri url = Uri.parse(glb.API.baseURL + "DelAdminProd");
     if (glb.usrTyp == '0') {

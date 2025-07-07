@@ -9,151 +9,146 @@ import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
 
-class AdminAllAppointments_card extends StatefulWidget {
+class AdminAllAppointments_card extends StatelessWidget {
   const AdminAllAppointments_card({
     super.key,
     required this.am,
     required this.filter,
   });
+
   final AppointAdmin_model am;
   final String filter;
-  @override
-  State<AdminAllAppointments_card> createState() =>
-      _AdminAllAppointments_cardState();
-}
 
-class _AdminAllAppointments_cardState extends State<AdminAllAppointments_card> {
+  bool get isVisible {
+    switch (filter) {
+      case 'All':
+        return true;
+      case 'Video':
+        return am.typ == '1';
+      case 'In-Clinic':
+        return am.typ == '0';
+      case 'Ongoing':
+        return am.status == '0';
+      case 'Cancled':
+        return am.status == '2';
+      case 'Completed':
+        return am.status == '1';
+      default:
+        return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Visibility(
-      visible: widget.filter == 'All'
-          ? true
-          : widget.filter == 'Video'
-              ? widget.am.typ == '1'
-              : widget.filter == 'In-Clinic'
-                  ? widget.am.typ == '0'
-                  : widget.filter == 'Ongoing'
-                      ? widget.am.status == '0'
-                      : widget.filter == 'Cancled'
-                          ? widget.am.status == '2'
-                          : widget.filter == 'Completed'
-                              ? widget.am.status == '1'
-                              : false,
-      child: Padding(
-        padding: EdgeInsets.all(8.0.sp),
-        child: Container(
-          height: Sizer.h_50 * 2,
-          color: widget.am.typ == '0'
-              ? Colours.blue.withOpacity(.5)
-              : Colours.orange.withOpacity(.5),
-          child: Padding(
-            padding: EdgeInsets.all(8.0.sp),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // todo: user row
+    if (!isVisible) return const SizedBox.shrink();
 
-                Row(
-                  children: [
-                    Container(
-                      height: 100,
-                      width: 100,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey[200],
-                          image: DecorationImage(
-                              image: NetworkImage("${widget.am.usr_img}"))),
-                    ),
-                    Txt(text: widget.am.usr_nm),
-                  ],
+    return Padding(
+      padding: EdgeInsets.all(8.sp),
+      child: Container(
+        padding: EdgeInsets.all(10.sp),
+        height: Sizer.h_50 * 2,
+        decoration: BoxDecoration(
+          color: am.typ == '0'
+              ? Colours.blue.withOpacity(0.5)
+              : Colours.orange.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            // 👤 User Info
+            _circularImageTextColumn(
+              imageUrl: am.usr_img,
+              name: am.usr_nm,
+              label: "",
+            ),
+
+            const VerticalDivider(width: 12),
+
+            // 🩺 Doctor Info
+            _circularImageTextColumn(
+              imageUrl: am.doc_img,
+              name: am.doc_nm,
+              label: am.address.replaceAll('///', ', '),
+              isDoctor: true,
+            ),
+
+            const Spacer(),
+
+            // 🏥 Clinic and Time Info
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Txt(
+                  text: glb.getDateTIme(am.Date_time),
                 ),
-                // todo: doc row
-                Row(
-                  children: [
-                    Container(
-                      height: 100,
-                      width: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey[200],
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            widget.am.doc_img,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 300,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Txt(text: widget.am.doc_nm),
-                          Expanded(child: Txt(text: widget.am.address)),
-                        ],
-                      ),
-                    ),
-                  ],
+                SizedBox(height: 0.5.h),
+                Txt(
+                  text: glb.getDate(am.Date_time),
                 ),
-                //todo: clinic row
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Txt(
-                      text: glb.getDateTIme(widget.am.Date_time),
-                    ),
-                    Txt(
-                      text: glb.getDate(widget.am.Date_time),
-                    ),
-                    Txt(
-                      text: getClinicNM(widget.am.Date_time),
-                    ),
-                  ],
-                ),
+                // SizedBox(height: 0.5.h),
+                // Txt(
+                //   text: am.Date_time,
+                // ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  getDocNM(String doc_id) {
-    String a = "t";
-    for (int i = 0; i < glb.Models.AllDocs_lst.length; i++) {
-      if (doc_id == glb.Models.AllDocs_lst[i].ID) {
-        a = glb.Models.AllDocs_lst[i].name;
-        break;
-      } else {
-        a = "";
-      }
-    }
-    return a;
+  Widget _circularImageTextColumn({
+    required String imageUrl,
+    required String name,
+    required String label,
+    bool isDoctor = false,
+  }) {
+    return Row(
+      children: [
+        Container(
+          height: 10.h,
+          width: 10.h,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey[300],
+            image: imageUrl.isNotEmpty
+                ? DecorationImage(
+                    image: NetworkImage(imageUrl),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: imageUrl.isEmpty
+              ? Icon(Icons.person, size: 30.sp, color: Colors.grey[700])
+              : null,
+        ),
+        SizedBox(width: 2.w),
+        SizedBox(
+          width: isDoctor ? 30.w : 20.w,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Txt(
+                text: name.isNotEmpty ? name : "N/A",
+              ),
+              if (label.isNotEmpty)
+                Txt(
+                  text: label,
+                  size: 14,
+                  maxLn: 2,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
-  getDocimg(String doc_id) {
-    String a = "t";
-    for (int i = 0; i < glb.Models.AllDocs_lst.length; i++) {
-      if (doc_id == glb.Models.AllDocs_lst[i].ID) {
-        a = glb.Models.AllDocs_lst[i].img;
-        break;
-      } else {
-        a = "";
-      }
+  String getClinicNM(String clinic_id) {
+    for (var clinic in glb.Models.AllClinics_lst) {
+      if (clinic.ID == clinic_id) return clinic.name;
     }
-    return a;
-  }
-
-  getClinicNM(String clinic_id) {
-    String a = "t";
-    for (int i = 0; i < glb.Models.AllClinics_lst.length; i++) {
-      if (clinic_id == glb.Models.AllClinics_lst[i].ID) {
-        a = glb.Models.AllClinics_lst[i].name;
-        break;
-      } else {
-        a = "";
-      }
-    }
-    return a;
+    return "";
   }
 }

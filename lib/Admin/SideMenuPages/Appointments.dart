@@ -23,343 +23,202 @@ class AllAppointments extends StatefulWidget {
   State<AllAppointments> createState() => _AllAppointmentsState();
 }
 
-List<String> filter = [
-  'All',
-  'In-Clinic',
-  'Video',
-  'Ongoing',
-  'Completed',
-  'Cancled',
-];
-
-List<String> DateFilter = ['Today', 'Select period'];
-
 class _AllAppointmentsState extends State<AllAppointments> {
-  String filter_value = filter.first;
-  String dateFilter_value = DateFilter.first;
+  final List<String> filterOptions = [
+    'All',
+    'In-Clinic',
+    'Video',
+    'Ongoing',
+    'Completed',
+    'Cancled',
+  ];
+  final List<String> dateOptions = ['Today', 'Select period'];
 
-  String from_dt = glb.getDate_sys(DateTime.now().toString());
-  String to_dt = glb.getDate_sys(DateTime.now().toString());
-  List<DateTime?> _dialogCalendarPickerValue = [DateTime.now()];
+  String selectedFilter = 'All';
+  String selectedDateOption = 'Today';
+
+  String fromDate = glb.getDate_sys(DateTime.now().toString());
+  String toDate = glb.getDate_sys(DateTime.now().toString());
+  List<DateTime?> _datePickerValue = [DateTime.now()];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    GetAllAppointments();
+  }
+
   @override
   Widget build(BuildContext context) {
-    var currentWidth = MediaQuery.of(context).size.width;
-    return Container(
-      child: Padding(
-        padding: EdgeInsets.all(8.sp),
-        child: Column(
-          children: [
-            Txt(
-              text: "All Appointments",
-              size: 20,
-              fntWt: FontWeight.bold,
-            ),
-            Container(
-              // color: Colours.HunyadiYellow,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    children: [
-                      DropdownButton(
-                        value: dateFilter_value,
-                        items: DateFilter.map<DropdownMenuItem<String>>(
-                            (String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Txt(
-                              text: value,
-                              fontColour: Colours.txt_black,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            dateFilter_value = value!;
-                          });
-                        },
-                      ),
-                      Visibility(
-                        visible: dateFilter_value == 'Select period',
-                        child: currentWidth > 600
-                            ? Row(
-                                children: [
-                                  Container(
-                                    child: Row(
-                                      children: [
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                              elevation: 0,
-                                              backgroundColor: Colors.grey),
-                                          onPressed: () async {
-                                            var frm_dt =
-                                                await showCalendarDatePicker2Dialog(
-                                              context: context,
-                                              config:
-                                                  CalendarDatePicker2WithActionButtonsConfig(),
-                                              dialogSize: const Size(325, 400),
-                                              value: _dialogCalendarPickerValue,
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            );
-                                            print(frm_dt);
-                                            setState(() {
-                                              from_dt = glb.getDate_sys(
-                                                  frm_dt!.first.toString());
-                                            });
-                                            // showDialog(
-                                            //     context: context,
-                                            //     builder: (BuildContext context) {
-                                            //       return AlertDialog(
-                                            //         content:
+    final isWideScreen = MediaQuery.of(context).size.width > 600;
 
-                                            //         DatePickerDialog(
-                                            //           initialDate: DateTime.now(),
-                                            //           initialEntryMode:
-                                            //               DatePickerEntryMode.calendarOnly,
-                                            //           firstDate: DateTime(1990),
-                                            //           lastDate: DateTime(2050),
-
-                                            //           onDatePickerModeChange: (value) {
-                                            //             print(value);
-                                            //           },
-                                            //         ),
-                                            //       );
-                                            //     });
-                                          },
-                                          child: Txt(
-                                              text: "From date: ${from_dt}"),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    child: Row(
-                                      children: [
-                                        ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                                elevation: 0,
-                                                backgroundColor: Colors.grey),
-                                            onPressed: () async {
-                                              var t_dt =
-                                                  await showCalendarDatePicker2Dialog(
-                                                context: context,
-                                                config:
-                                                    CalendarDatePicker2WithActionButtonsConfig(),
-                                                dialogSize:
-                                                    const Size(325, 400),
-                                                value:
-                                                    _dialogCalendarPickerValue,
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                              );
-                                              setState(() {
-                                                to_dt = glb.getDate_sys(
-                                                    t_dt!.first.toString());
-                                              });
-                                              print(to_dt);
-                                              // showDialog(
-                                              //     context: context,
-                                              //     builder: (BuildContext context) {
-                                              //       return AlertDialog(
-                                              //         content:
-
-                                              //         DatePickerDialog(
-                                              //           initialDate: DateTime.now(),
-                                              //           initialEntryMode:
-                                              //               DatePickerEntryMode.calendarOnly,
-                                              //           firstDate: DateTime(1990),
-                                              //           lastDate: DateTime(2050),
-
-                                              //           onDatePickerModeChange: (value) {
-                                              //             print(value);
-                                              //           },
-                                              //         ),
-                                              //       );
-                                              //     });
-                                            },
-                                            child:
-                                                Txt(text: "To date: ${to_dt}")),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  Container(
-                                    child: Row(
-                                      children: [
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                              elevation: 0,
-                                              backgroundColor: Colors.grey),
-                                          onPressed: () async {
-                                            var frm_dt =
-                                                await showCalendarDatePicker2Dialog(
-                                              context: context,
-                                              config:
-                                                  CalendarDatePicker2WithActionButtonsConfig(),
-                                              dialogSize: const Size(325, 400),
-                                              value: _dialogCalendarPickerValue,
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            );
-                                            print(frm_dt);
-                                            setState(() {
-                                              from_dt = glb.getDate_sys(
-                                                  frm_dt!.first.toString());
-                                            });
-                                            // showDialog(
-                                            //     context: context,
-                                            //     builder: (BuildContext context) {
-                                            //       return AlertDialog(
-                                            //         content:
-
-                                            //         DatePickerDialog(
-                                            //           initialDate: DateTime.now(),
-                                            //           initialEntryMode:
-                                            //               DatePickerEntryMode.calendarOnly,
-                                            //           firstDate: DateTime(1990),
-                                            //           lastDate: DateTime(2050),
-
-                                            //           onDatePickerModeChange: (value) {
-                                            //             print(value);
-                                            //           },
-                                            //         ),
-                                            //       );
-                                            //     });
-                                          },
-                                          child: Txt(
-                                              text: "From date: ${from_dt}"),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    child: Row(
-                                      children: [
-                                        ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                                elevation: 0,
-                                                backgroundColor: Colors.grey),
-                                            onPressed: () async {
-                                              var t_dt =
-                                                  await showCalendarDatePicker2Dialog(
-                                                context: context,
-                                                config:
-                                                    CalendarDatePicker2WithActionButtonsConfig(),
-                                                dialogSize:
-                                                    const Size(325, 400),
-                                                value:
-                                                    _dialogCalendarPickerValue,
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                              );
-                                              setState(() {
-                                                to_dt = glb.getDate_sys(
-                                                    t_dt!.first.toString());
-                                              });
-                                              print(to_dt);
-                                              // showDialog(
-                                              //     context: context,
-                                              //     builder: (BuildContext context) {
-                                              //       return AlertDialog(
-                                              //         content:
-
-                                              //         DatePickerDialog(
-                                              //           initialDate: DateTime.now(),
-                                              //           initialEntryMode:
-                                              //               DatePickerEntryMode.calendarOnly,
-                                              //           firstDate: DateTime(1990),
-                                              //           lastDate: DateTime(2050),
-
-                                              //           onDatePickerModeChange: (value) {
-                                              //             print(value);
-                                              //           },
-                                              //         ),
-                                              //       );
-                                              //     });
-                                            },
-                                            child:
-                                                Txt(text: "To date: ${to_dt}")),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      )
-                    ],
+    return Padding(
+      padding: EdgeInsets.all(8.sp),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Txt(
+            text: "All Appointments",
+            size: 20,
+            fntWt: FontWeight.bold,
+          ),
+          SizedBox(height: 1.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildDateFilterSection(isWideScreen),
+              _buildTypeFilterSection(),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          _buildCategoryTabs(),
+          SizedBox(height: 2.h),
+          Expanded(
+            child: glb.Models.appointments_admin_lst.isEmpty
+                ? Center(child: Txt(text: "No appointments"))
+                : ListView.builder(
+                    itemCount: glb.Models.appointments_admin_lst.length,
+                    itemBuilder: (context, index) {
+                      return AdminAllAppointments_card(
+                        am: glb.Models.appointments_admin_lst.reversed
+                            .toList()[index],
+                        filter: selectedFilter,
+                      );
+                    },
                   ),
-                  Column(
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required List<String> items,
+    required String selectedValue,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButton<String>(
+      value: selectedValue,
+      items: items.map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Txt(text: value, fontColour: Colours.txt_black),
+        );
+      }).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildDateButton(String label, VoidCallback onPressed) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        backgroundColor: Colors.grey.shade300,
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      ),
+      onPressed: onPressed,
+      child: Txt(text: label),
+    );
+  }
+
+  Widget _buildDateFilterSection(bool isWide) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDropdown(
+          items: dateOptions,
+          selectedValue: selectedDateOption,
+          onChanged: (val) => setState(() => selectedDateOption = val!),
+        ),
+        if (selectedDateOption == 'Select period')
+          Padding(
+            padding: EdgeInsets.only(top: 1.h),
+            child: isWide
+                ? Row(
                     children: [
-                      DropdownButton(
-                        value: filter_value,
-                        items: filter
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Txt(
-                              text: value,
-                              fontColour: Colours.txt_black,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            filter_value = value!;
-                          });
-                        },
-                      ),
-                      ElevatedButton(
-                          onPressed: () {
-                            GetAllAppointments();
-                          },
-                          child: Txt(text: "Search"))
+                      _fromDateBtn(),
+                      SizedBox(width: 2.w),
+                      _toDateBtn()
                     ],
                   )
-                ],
-              ),
-            ),
-            Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colours.orange, width: 3),
-                    ),
+                : Column(
+                    children: [
+                      _fromDateBtn(),
+                      SizedBox(height: 1.h),
+                      _toDateBtn()
+                    ],
                   ),
-                  child: Txt(text: "Video appointments"),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colours.blue, width: 3),
-                    ),
-                  ),
-                  child: Txt(text: "InClinic appointments"),
-                )
-              ],
-            ),
-            SizedBox(
-              height: 60.h,
-              child: glb.Models.appointments_admin_lst.length == 0
-                  ? Center(
-                      child: Txt(text: "No appointments"),
-                    )
-                  : ListView.builder(
-                      itemCount: glb.Models.appointments_admin_lst.length,
-                      itemBuilder: (context, index) {
-                        return AdminAllAppointments_card(
-                          am: glb.Models.appointments_admin_lst.reversed
-                              .toList()[index],
-                          filter: filter_value,
-                        );
-                      }),
-            )
-          ],
+          ),
+      ],
+    );
+  }
+
+  Widget _fromDateBtn() => _buildDateButton(
+        "From date: $fromDate",
+        () async {
+          var picked = await showCalendarDatePicker2Dialog(
+            context: context,
+            config: CalendarDatePicker2WithActionButtonsConfig(),
+            dialogSize: const Size(325, 400),
+            value: _datePickerValue,
+            borderRadius: BorderRadius.circular(15),
+          );
+          if (picked != null) {
+            setState(() => fromDate = glb.getDate_sys(picked.first.toString()));
+          }
+        },
+      );
+
+  Widget _toDateBtn() => _buildDateButton(
+        "To date: $toDate",
+        () async {
+          var picked = await showCalendarDatePicker2Dialog(
+            context: context,
+            config: CalendarDatePicker2WithActionButtonsConfig(),
+            dialogSize: const Size(325, 400),
+            value: _datePickerValue,
+            borderRadius: BorderRadius.circular(15),
+          );
+          if (picked != null) {
+            setState(() => toDate = glb.getDate_sys(picked.first.toString()));
+          }
+        },
+      );
+
+  Widget _buildTypeFilterSection() {
+    return Column(
+      children: [
+        _buildDropdown(
+          items: filterOptions,
+          selectedValue: selectedFilter,
+          onChanged: (val) => setState(() => selectedFilter = val!),
         ),
+        SizedBox(height: 1.h),
+        ElevatedButton(
+          onPressed: GetAllAppointments,
+          child: Txt(text: "Search"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryTabs() {
+    return Row(
+      children: [
+        _buildTab("Video appointments", Colours.orange),
+        SizedBox(width: 3.w),
+        _buildTab("InClinic appointments", Colours.blue),
+      ],
+    );
+  }
+
+  Widget _buildTab(String title, Color color) {
+    return Container(
+      padding: EdgeInsets.only(bottom: 2),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: color, width: 3)),
       ),
+      child: Txt(text: title),
     );
   }
 
@@ -370,11 +229,11 @@ class _AllAppointmentsState extends State<AllAppointments> {
     Uri url = Uri.parse(glb.API.baseURL + "get_appointment_admin");
     print(url);
     var boody = {};
-    if (dateFilter_value == 'Select period') {
+    if (selectedDateOption == 'Select period') {
       boody = {
         'day': '1',
-        'from_dt': from_dt,
-        'to_dt': to_dt,
+        'from_dt': fromDate,
+        'to_dt': toDate,
       };
     } else {
       boody = {'day': '0'};
@@ -411,7 +270,9 @@ class _AllAppointmentsState extends State<AllAppointments> {
             state: list1[i]['state'].toString(),
             status: list1[i]['status'].toString(),
             address: list1[i]['address'].toString(),
-            Date_time: list1[i]['timing'].toString(),
+            Date_time: list1[i]['date'].toString() +
+                " " +
+                list1[i]['timing'].toString(),
           ),
         );
       }
@@ -435,7 +296,8 @@ class _AllAppointmentsState extends State<AllAppointments> {
           state: list2[i]['state'].toString(),
           status: list2[i]['status'].toString(),
           address: list2[i]['doc_address'].toString(),
-          Date_time: list2[i]['timing'].toString(),
+          Date_time:
+              list2[i]['date'].toString() + " " + list2[i]['timing'].toString(),
         ));
       }
 

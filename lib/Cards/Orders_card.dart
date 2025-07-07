@@ -1,3 +1,4 @@
+import 'package:bighter_panel/Admin/SideMenuPages/docOrderDets_scrn.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
 import 'package:bighter_panel/commonScreens/orderDets_scrn.dart';
 import 'package:bighter_panel/models/allOrders_model.dart';
@@ -6,90 +7,85 @@ import 'package:bighter_panel/Utils/global.dart' as glb;
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
-class OrdersCard extends StatefulWidget {
-  const OrdersCard({super.key, required this.order});
+class OrdersCard extends StatelessWidget {
   final AllordersModel order;
 
-  @override
-  State<OrdersCard> createState() => _OrdersCardState();
-}
-
-class _OrdersCardState extends State<OrdersCard> {
+  const OrdersCard({super.key, required this.order, this.userOrder = true});
+  final bool userOrder;
   @override
   Widget build(BuildContext context) {
     var currentWidth = MediaQuery.of(context).size.width;
-    return Padding(
-      padding: EdgeInsets.all(currentWidth <= 600 ? 8.sp : 0.5.sp),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OrderDetailsScrn(
-                orderDetails: widget.order,
-              ),
-            ),
-          );
-        },
-        child: Container(
-          // height: 100,
-          // width: 200,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.grey,
-              ),
-            ),
-            borderRadius: BorderRadius.circular(10.sp),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(8.sp),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+
+    return InkWell(
+      onTap: () {
+        userOrder
+            ? Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OrderDetailsScrn(orderDetails: order),
+                ),
+              )
+            : Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DocOrderDetailsScrn(
+                    orderDetails: order,
+                  ),
+                ),
+              );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10.sp),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(2, 2),
+            )
+          ],
+        ),
+        padding: EdgeInsets.all(12.sp),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// Top Row: Date & Time
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Txt(text: glb.getDate(widget.order.order_date)),
-                    SizedBox(
-                      width: 1.w,
-                    ),
-                    Txt(
-                      text: glb.getDateTIme(widget.order.order_date),
-                    ),
-                  ],
+                Txt(text: glb.getDate(order.order_date)),
+                Txt(text: glb.getDateTIme(order.order_date)),
+              ],
+            ),
+            SizedBox(height: 1.h),
+
+            /// User Info
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: currentWidth <= 600 ? 10.w : 2.5.w,
+                  backgroundImage: NetworkImage(order.user_image),
                 ),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: currentWidth <= 600 ? 10.w : 2.w,
-                      backgroundImage: NetworkImage(widget.order.user_image),
-                    ),
-                    SizedBox(width: 1.w),
-                    Txt(
-                      text: widget.order.user_name,
-                      // fontSize: 14,
-                      // fontWeight: FontWeight.w500,
-                    ),
-                  ],
-                ),
-                SizedBox(height: 1.h),
-                Txt(
-                  text: "Total: ₹ " + widget.order.total,
-                  textAlignment: TextAlign.center,
-                ),
-                Divider(
-                  color: Colors.grey,
-                ),
-                Txt(
-                  text: "Payment ID: " + widget.order.payment_id,
-                  // fontSize: 14,
-                  // fontWeight: FontWeight.w500,
+                SizedBox(width: 2.w),
+                Expanded(
+                  child: Txt(
+                    text: order.user_name,
+                    maxLn: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
-          ),
+
+            SizedBox(height: 1.h),
+            Txt(
+              text: "Total: ₹ ${order.total}",
+              textAlignment: TextAlign.left,
+            ),
+            Divider(thickness: 1, color: Colors.grey[300]),
+            Txt(text: "Payment ID: ${order.payment_id}"),
+          ],
         ),
       ),
     );

@@ -89,11 +89,19 @@ class API {
 
   static const String UpdateAdditionalFields = "updateAF";
 
+  static const String getAllOrders = "GetAllOrders";
+
   static const String getDocOrders = "GetAllDocOrders";
   static const String getOrderDetails = "GetOrdersDets";
 
   static const String get_docOrder_summary = "get_docOrder_summary";
-  static const String updateOrderStatus = "DocShiptoAdmin";
+  static const String updateOrderStatus =
+      "DocShiptoAdmin"; //update doc to admin that needs to be shipped to user
+  static const String OrderStatusUpdate = "OrderstsUpdt"; //update admin to user
+
+  static const String Admin_getDocOrdersummary = "Admin_getDocOrdersummary";
+  static const String Admin_getDocOrderDets = "Admin_getDocOrderDets";
+  static const String AdminDocOrderStatusUpdt = "AdminDocOrderStatusUpdt";
 }
 
 List<DataRow> Invoice = [];

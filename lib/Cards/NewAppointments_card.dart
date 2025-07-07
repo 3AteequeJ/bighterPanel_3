@@ -1,281 +1,267 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
 import 'package:bighter_panel/models/Appointments_model.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
-import '../Utilities/sizer.dart';
+import 'package:bighter_panel/Utilities/sizer.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
-import 'package:bighter_panel/doctor/SideMenuScreens/NewAppointments/newAppointments.dart'
-    as nap;
 
 class NewAppointments_card extends StatefulWidget {
+  final Appointments_model appointment;
+  final String filter;
+
   const NewAppointments_card({
     super.key,
-    required this.am,
+    required this.appointment,
     required this.filter,
   });
-  final Appointments_model am;
-  final String filter;
+
   @override
   State<NewAppointments_card> createState() => _NewAppointments_cardState();
 }
 
-Widget usrContainer = Container(),
-    dateTime_container = Container(),
-    Buttons_container = Container();
-
 class _NewAppointments_cardState extends State<NewAppointments_card> {
-  List<Widget> myContainers = [];
+  final List<Widget> _containers = [];
+  final List<Appointments_model> _appointments = [];
+
   @override
   void initState() {
-    // TODO: implement initState
+    super.initState();
+    _buildContainers();
+  }
 
-    myContainers = [usrCont(), DtCont(), btnCont()];
+  void _buildContainers() {
+    _containers.addAll([
+      _userContainer(),
+      _dateTimeContainer(),
+      _buttonsContainer(),
+    ]);
+
     if (glb.usrTyp == '2' && glb.clinicRole != '2') {
-      myContainers.insert(1, docContainer());
+      _containers.insert(1, _doctorContainer());
       if (glb.clinicRole == '0') {
-        myContainers.insert(2, BranchDetsCont());
+        _containers.insert(2, _branchDetailsContainer());
       }
     }
+  }
+
+  bool _shouldDisplay() {
+    final appointment = widget.appointment;
+    final filter = widget.filter;
+
+    if (filter == 'All') return true;
+    if (filter == 'Video') return appointment.type == '1';
+    if (filter == 'In-Clinic') return appointment.type == '0';
+    if (filter == 'Ongoing') return appointment.status == '0';
+    if (filter == 'Canceled') return appointment.status == '2';
+    if (filter == 'Completed') return appointment.status == '1';
+
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Visibility(
-      // visible: true,
-      visible: widget.filter == 'All'
-          ? true
-          : widget.filter == 'Video'
-              ? widget.am.type == '1'
-              : widget.filter == 'In-Clinic'
-                  ? widget.am.type == '0'
-                  : widget.filter == 'Ongoing'
-                      ? widget.am.status == '0'
-                      : widget.filter == 'Cancled'
-                          ? widget.am.status == '2'
-                          : widget.filter == 'Completed'
-                              ? widget.am.status == '1'
-                              : false,
-      child: Padding(
-        padding: EdgeInsets.all(Sizer.Pad),
+    if (!_shouldDisplay()) return const SizedBox();
+
+    return Padding(
+      padding: EdgeInsets.all(Sizer.Pad),
+      child: Material(
+        elevation: 2,
+        borderRadius: BorderRadius.circular(12),
         child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(),
-                left: BorderSide(
-                  width: 3,
-                  color: widget.am.type == '0' ? Colours.green : Colours.orange,
-                ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border(
+              left: BorderSide(
+                width: 4,
+                color: widget.appointment.type == '0'
+                    ? Colours.green
+                    : Colours.orange,
               ),
             ),
-            child: Padding(
-              padding: EdgeInsets.all(Sizer.Pad),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: myContainers,
-              ),
-            )),
-      ),
-    );
-  }
-
-  docContainer() {
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: 200,
-      ),
-      child: Row(
-        children: [
-          // todo doc img
-          Container(
-            height: 50,
-            width: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colours.txt_grey,
-              image: DecorationImage(
-                onError: (exception, stackTrace) {
-                  AssetImage("assets/images/user.png");
-                },
-                image: NetworkImage(widget.am.doc_img),
-              ),
+            color: Colors.white,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(Sizer.Pad),
+            child: Wrap(
+              spacing: 20,
+              runSpacing: 10,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.spaceBetween,
+              children: _containers,
             ),
           ),
-          Txt(text: widget.am.doc_nm)
-        ],
+        ),
       ),
     );
   }
 
-  BranchDetsCont() {
-    return Container(
-      child: Row(
+  Widget _userContainer() => Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.location_on_outlined),
+          _circleImage(widget.appointment.usr_img),
+          const SizedBox(width: 10),
+          Txt(
+            text: widget.appointment.userNM,
+            maxLn: 1,
+            fntWt: FontWeight.w500,
+          ),
+        ],
+      );
+
+  Widget _doctorContainer() => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _circleImage(widget.appointment.doc_img),
+          const SizedBox(width: 10),
+          Txt(text: widget.appointment.doc_nm),
+        ],
+      );
+
+  Widget _branchDetailsContainer() => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.location_on_outlined),
+          const SizedBox(width: 5),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Txt(text: widget.am.clinicNM),
-              Txt(text: widget.am.city),
-              Txt(text: widget.am.state),
+              Txt(text: widget.appointment.clinicNM),
+              Txt(text: widget.appointment.city),
+              Txt(text: widget.appointment.state),
             ],
           ),
         ],
-      ),
-    );
-  }
+      );
 
-  usrCont() {
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: 200,
-      ),
-      child: Row(
+  Widget _dateTimeContainer() => Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // todo usr img
-          Container(
-            height: 50,
-            width: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colours.txt_grey,
-              image: DecorationImage(
-                onError: (exception, stackTrace) {
-                  AssetImage("assets/images/user.png");
-                },
-                image: NetworkImage(widget.am.usr_img),
-              ),
-            ),
-          ),
-
-          Expanded(
-              child: Txt(
-            text: widget.am.userNM,
-            maxLn: 1,
-          ))
-        ],
-      ),
-    );
-  }
-
-  DtCont() {
-    return Container(
-      child: Row(
-        children: [
-          Icon(Icons.calendar_month_outlined),
+          const Icon(Icons.calendar_month_outlined),
+          const SizedBox(width: 5),
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Txt(text: glb.getDateTIme(widget.am.dt_time)),
-              Txt(text: glb.getDate(widget.am.dt_time)),
+              Txt(text: glb.getDateTIme(widget.appointment.dt_time)),
+              Txt(text: glb.getDate(widget.appointment.dt_time)),
             ],
-          )
+          ),
         ],
+      );
+
+  Widget _buttonsContainer() {
+    final status = widget.appointment.status;
+
+    if (status == '0') {
+      return Wrap(
+        spacing: 10,
+        children: [
+          _statusButton("Cancel", Colours.Red, () {
+            _confirmStatusUpdate(
+                '2', "Do you want to cancel this appointment?");
+          }),
+          _statusButton("Completed", Colours.green, () {
+            _confirmStatusUpdate(
+                '1', "Do you want to mark this appointment as completed?");
+          }),
+        ],
+      );
+    } else if (status == '1') {
+      return _statusLabel("Completed", Colours.green);
+    } else if (status == '2') {
+      return _statusLabel("Canceled", Colours.Red);
+    } else {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _statusLabel("Time Up", Colours.HunyadiYellow),
+          const SizedBox(height: 5),
+          _statusButton("Completed", Colours.green, () {
+            _confirmStatusUpdate(
+                '1', "Do you want to mark this appointment as completed?");
+          }),
+        ],
+      );
+    }
+  }
+
+  Widget _statusButton(String text, Color color, VoidCallback onTap) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      onPressed: onTap,
+      child: Txt(text: text),
+    );
+  }
+
+  Widget _statusLabel(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Txt(
+        text: text,
+        fontColour: color,
+        fntWt: FontWeight.bold,
+        size: 16,
       ),
     );
   }
 
-  btnCont() {
-    return widget.am.status == '0'
-        ? Container(
-            child: Row(
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colours.Red,
-                  ),
-                  onPressed: () {
-                    glb.ConfirmationBox(
-                        context, "Do you want to cancle this appointment", () {
-                      updtSts_async(widget.am.ID, '2');
-                    });
-                  },
-                  child: Txt(text: "Cancle"),
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    glb.ConfirmationBox(context,
-                        "Do you want to mark this appointment satus as completed",
-                        () {
-                      updtSts_async(widget.am.ID, '1');
-                    });
-                  },
-                  child: Txt(text: "Completed"),
-                ),
-              ],
-            ),
-          )
-        : widget.am.status == '1'
-            ? Txt(
-                text: "Completed",
-                fontColour: Colours.green,
-                fntWt: FontWeight.bold,
-                size: 18,
-              )
-            : widget.am.status == '2'
-                ? Txt(
-                    text: "Cancled",
-                    fontColour: Colours.Red,
-                    fntWt: FontWeight.bold,
-                    size: 18,
-                  )
-                : Column(
-                    children: [
-                      Txt(
-                        text: "Time Up",
-                        fontColour: Colours.HunyadiYellow,
-                        fntWt: FontWeight.bold,
-                        size: 18,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          glb.ConfirmationBox(context,
-                              "Do you want to mark this appointment satus as completed",
-                              () {
-                            updtSts_async(widget.am.ID, '1');
-                          });
-                        },
-                        child: Txt(text: "Completed"),
-                      ),
-                    ],
-                  );
+  Widget _circleImage(String url) {
+    return ClipOval(
+      child: Image.network(
+        url,
+        height: 50,
+        width: 50,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            Image.asset("assets/images/user.png", height: 50, width: 50),
+      ),
+    );
   }
 
-  updtSts_async(String id, String sts) async {
-    Uri url = Uri.parse(glb.API.baseURL + glb.API.update_status);
+  void _confirmStatusUpdate(String status, String message) {
+    glb.ConfirmationBox(context, message, () {
+      _updateStatus(widget.appointment.ID, status);
+    });
+  }
+
+  Future<void> _updateStatus(String id, String status) async {
+    final url = Uri.parse(glb.API.baseURL + glb.API.update_status);
 
     try {
-      var res = await http.post(url, headers: {
-        'accept': 'application/json',
-      }, body: {
-        'app_id': "${id}",
-        'sts': '$sts',
-      });
-      print(res.statusCode);
-      print(res.body);
-      var bdy = json.decode(res.body);
-      print("status stscode = ${res.statusCode}");
+      final res = await http.post(
+        url,
+        headers: {'accept': 'application/json'},
+        body: {'app_id': id, 'sts': status},
+      );
+
       if (res.statusCode == 200) {
         glb.SuccessToast(context, "Done");
         Navigator.pop(context);
+
         if (glb.usrTyp == '1') {
-          getDocAppointments_async();
+          await getDocAppointmentsAsync();
         } else if (glb.usrTyp == '2') {
-          getDocAppointments1_async();
+          await getDocAppointments1Async();
         }
       }
     } catch (e) {
-      print("Exception => $e");
+      print("Update status exception: $e");
     }
   }
 
   List<Appointments_model> AM = [];
-  getDocAppointments_async() async {
+  getDocAppointmentsAsync() async {
     AM = [];
     print("getDocAppointments_async ");
     Uri url = Uri.parse(glb.API.baseURL + glb.API.getDocAppointments);
@@ -336,7 +322,7 @@ class _NewAppointments_cardState extends State<NewAppointments_card> {
     }
   }
 
-  getDocAppointments1_async() async {
+  getDocAppointments1Async() async {
     AM = [];
     print(" clinin getDocAppointments_async ");
     Uri url = Uri.parse(glb.API.baseURL + glb.API.getAppointments);

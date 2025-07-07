@@ -5,9 +5,7 @@ import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
 import 'package:bighter_panel/doctor/docHome_pg.dart';
 import 'package:bighter_panel/models/BookedAppointments_model.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
@@ -20,1117 +18,850 @@ class NewSchedule extends StatefulWidget {
   State<NewSchedule> createState() => _NewScheduleState();
 }
 
-const List<String> list = <String>['One', 'Two', 'Three', 'Four'];
-List<String> timeList = generateTimeList(8, 12);
+// Global time maps
 Map<String, DateTime> timeMap = generateTimeMap(8, 12);
-Map<String, DateTime> afternoon_timeMap = generateTimeMap(12, 17);
-Map<String, DateTime> evening_timeMap = generateTimeMap(12, 23);
+Map<String, DateTime> afternoonTimeMap = generateTimeMap(12, 17);
+Map<String, DateTime> eveningTimeMap = generateTimeMap(12, 23);
 
 Map<String, DateTime> myMorningMap = {};
 Map<String, DateTime> myAfternoonMap = {};
 Map<String, DateTime> myEveningMap = {};
 
 class _NewScheduleState extends State<NewSchedule> {
-  String FromValue = timeMap.keys.first;
-  String ToValue = evening_timeMap.keys.first;
+  late String fromValue;
+  late String toValue;
 
-  final TextEditingController colorController = TextEditingController();
-  String fromTime = "", toTime = "";
-  // IconLabel? selectedIcon;
+  String fromTime = "";
+  String toTime = "";
 
-  List<String> myList = [];
-  Map<String, DateTime> myMap = {};
-  bool mor_bool = false;
-  bool aft_bool = false;
-  bool eve_bool = false;
-
-  var a1 = glb.usrTyp == '1'
-      ? glb.doctor.available_from.split(":")
-      : glb.clinicBranchDoc.available_from.split(":");
-  var a2 = glb.usrTyp == '1'
-      ? glb.doctor.available_to.split(":")
-      : glb.clinicBranchDoc.available_to.split(":");
-  List<DateTime> availableDates = [];
   late DateTime selectedDate;
+  bool isLoading = false;
+  List<BookedAppointments_model> bookedAppointments = [];
+
+  late List<String> availableFromHours;
+  late List<String> availableToHours;
+  late List<DateTime> availableDates;
+
   @override
   void initState() {
-    // TODO: implement initState
-    setState(() {
-      final today = DateTime.now();
-      selectedDate = today;
-      for (int i = 0; i <= 15; i++) {
-        availableDates.add(today.add(Duration(days: i)));
-      }
+    super.initState();
+    _initializeData();
+  }
 
-      print(timeMap);
-      var list = timeMap.entries.toList();
-      int idx = list.indexWhere((element) =>
-          element.key ==
-          glb.getDateTIme(
-              "2024-04-30 ${glb.usrTyp == '1' ? glb.doctor.available_from : glb.clinicBranchDoc.available_from}"));
-      FromValue = timeMap.keys.elementAt(idx);
-      var list2 = evening_timeMap.entries.toList();
-      int idx2 = list2.indexWhere((element) =>
-          element.key ==
-          glb.getDateTIme(
-              "2024-04-30 ${glb.usrTyp == '1' ? glb.doctor.available_to : glb.clinicBranchDoc.available_to}"));
-      ToValue = evening_timeMap.keys.elementAt(idx2);
+  void _initializeData() {
+    final today = DateTime.now();
+    selectedDate = today;
+    availableDates =
+        List.generate(16, (index) => today.add(Duration(days: index)));
 
-      Map<String, DateTime> myTimingsMap = generateTimeMap1(
-        int.parse(a1.first),
-        int.parse(a1[1]),
-        int.parse(a2.first),
-        int.parse(
-          a2[1],
-        ),
+    // Initialize time values
+    fromValue = timeMap.keys.first;
+    toValue = eveningTimeMap.keys.first;
+
+    // Get available hours from global data
+    final availableFrom = glb.usrTyp == '1'
+        ? glb.doctor.available_from.split(":")
+        : glb.clinicBranchDoc.available_from.split(":");
+    final availableTo = glb.usrTyp == '1'
+        ? glb.doctor.available_to.split(":")
+        : glb.clinicBranchDoc.available_to.split(":");
+
+    availableFromHours = availableFrom;
+    availableToHours = availableTo;
+
+    _setInitialTimeValues();
+    _generateMyTimingsMap();
+    _loadBookedAppointments();
+  }
+
+  void _setInitialTimeValues() {
+    try {
+      final fromTimeStr = glb.getDateTIme(
+          "2024-04-30 ${glb.usrTyp == '1' ? glb.doctor.available_from : glb.clinicBranchDoc.available_from}");
+      final toTimeStr = glb.getDateTIme(
+          "2024-04-30 ${glb.usrTyp == '1' ? glb.doctor.available_to : glb.clinicBranchDoc.available_to}");
+
+      // Find matching time values
+      final fromIndex =
+          timeMap.keys.toList().indexWhere((key) => key == fromTimeStr);
+      final toIndex =
+          eveningTimeMap.keys.toList().indexWhere((key) => key == toTimeStr);
+
+      if (fromIndex != -1) fromValue = timeMap.keys.elementAt(fromIndex);
+      if (toIndex != -1) toValue = eveningTimeMap.keys.elementAt(toIndex);
+    } catch (e) {
+      print("Error setting initial time values: $e");
+    }
+  }
+
+  void _generateMyTimingsMap() {
+    final startHour = int.tryParse(availableFromHours.first) ?? 8;
+    final startMinute = int.tryParse(
+            availableFromHours.length > 1 ? availableFromHours[1] : "0") ??
+        0;
+    final endHour = int.tryParse(availableToHours.first) ?? 17;
+    final endMinute =
+        int.tryParse(availableToHours.length > 1 ? availableToHours[1] : "0") ??
+            0;
+
+    generateTimeMap1(startHour, startMinute, endHour, endMinute);
+  }
+
+  Future<void> _loadBookedAppointments() async {
+    setState(() => isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse(glb.API.baseURL + "get_video_slot"),
+        body: {
+          'doctor_id': glb.usrTyp == '1'
+              ? glb.doctor.doc_id
+              : glb.clinicBranchDoc.doc_id,
+          'date': DateFormat('yyyy-MM-dd').format(selectedDate),
+          'branch_doc': glb.usrTyp == '1' ? '0' : '1',
+        },
       );
-      // var list2 = evening_timeMap.entries.toList();
-      // int idx2 = list.indexWhere((element) =>
-      //     element.key ==
-      //     glb.getDateTIme("2024-04-30 ${glb.doctor.available_to}"));
-      // ToValue = evening_timeMap.keys.elementAt(idx2);
-      // print(glb.getDateTIme("2024-04-30 ${glb.doctor.available_from}"));
-      // print(glb.getDateTIme("2024-04-30 ${glb.doctor.available_to}"));
-      // var b = glb.getDateTIme("2024-04-30 ${glb.doctor.available_to}");
-      // ToValue = evening_timeMap[b].toString();
 
-      // FromValue = glb.getDateTIme("2024-04-30 ${glb.doctor.available_from}");
-      // ToValue = glb.getDateTIme("2024-04-30 ${glb.doctor.available_to}");
-    });
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          bookedAppointments = data
+              .map((item) => BookedAppointments_model(
+                    ID: item['id'].toString(),
+                    time: item['slot_time'].toString(),
+                  ))
+              .toList();
+          glb.Models.BookedAppointments_lst = bookedAppointments;
+        });
+      }
+    } catch (e) {
+      print("Error loading appointments: $e");
+      glb.errorToast(context, "Failed to load appointments");
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    var currentWidth = MediaQuery.of(context).size.width;
-    return Scaffold(
-      body: Container(
-          child: Padding(
-        padding: EdgeInsets.all(12.0.sp),
-        child: Column(
-          children: [
-            Container(
-              height: 150,
-              decoration: BoxDecoration(
-                border: Border.all(),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(8.0.sp),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(),
-                          Txt(
-                            text: "Clinic timing",
-                            size: 18,
-                            fntWt: FontWeight.bold,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Txt(text: "From"),
-                              DropdownButton<String>(
-                                value: FromValue,
-
-                                icon: const Icon(Icons.arrow_downward),
-                                elevation: 16,
-                                style:
-                                    const TextStyle(color: Colors.deepPurple),
-                                // underline: Container(
-                                //   height: 2,
-                                //   color: Colors.deepPurpleAccent,
-                                // ),
-                                onChanged: (String? value) {
-                                  // This is called when the user selects an item.
-                                  setState(() {
-                                    // print(value);
-                                    // print(timeMap[value]);
-                                    // print(glb.getDateTIme_sys(
-                                    // timeMap[value].toString()));
-                                    fromTime = glb.getDateTIme_sys(
-                                        timeMap[value].toString());
-                                    FromValue = value!;
-                                    var list = timeMap.entries.toList();
-                                    String b = glb.usrTyp == '1'
-                                        ? glb
-                                            .getDateTIme(
-                                                "2024-04-30 ${glb.doctor.available_from}")
-                                            .toString()
-                                        : glb
-                                            .getDateTIme(
-                                                "2024-04-30 ${glb.clinicBranchDoc.available_from}")
-                                            .toString();
-                                    // int idx = list.indexWhere((element) =>
-                                    //     element.key ==
-                                    //     glb
-                                    //         .getDateTIme(
-                                    //             "2024-04-30 ${glb.doctor.available_from}")
-                                    //         .toString());
-                                    // 09:00 AM
-                                    // 09:00 AM
-                                    int idx = list.indexWhere((element) =>
-                                        element.key.trim() == b.trim());
-                                    // print("b = $b");
-                                    // print(b.trim() == "9:00 AM");
-                                    // print(glb
-                                    //     .getDateTIme(
-                                    //         "2024-04-30 ${glb.doctor.available_from}")
-                                    //     .toString());
-                                    // print("idx == $idx");
-                                    // FromValue = timeMap.keys.elementAt(idx);
-                                  });
-                                },
-                                items: timeMap.keys
-                                    .map<DropdownMenuItem<String>>(
-                                        (String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            width: 400,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Txt(text: "TO"),
-                                DropdownButton<String>(
-                                  value: ToValue,
-
-                                  icon: const Icon(Icons.arrow_downward),
-                                  elevation: 16,
-                                  style:
-                                      const TextStyle(color: Colors.deepPurple),
-                                  // underline: Container(
-                                  //   height: 2,
-                                  //   color: Colors.deepPurpleAccent,
-                                  // ),
-                                  onChanged: (String? value) {
-                                    // This is called when the user selects an item.
-                                    setState(() {
-                                      ToValue = value!;
-                                      // print(glb.getDateTIme(
-                                      //     evening_timeMap[value].toString()));
-                                      // print(glb.getDateTIme(
-                                      //     "2024-04-30 ${glb.doctor.available_to}"));
-                                      toTime = glb.getDateTIme_sys(
-                                          evening_timeMap[value].toString());
-                                      var a = glb.getDateTIme(
-                                          evening_timeMap[value].toString());
-                                      var b = glb.usrTyp == '1'
-                                          ? glb.getDateTIme(
-                                              "2024-04-30 ${glb.doctor.available_to}")
-                                          : glb.getDateTIme(
-                                              "2024-04-30 ${glb.clinicBranchDoc.available_to}");
-                                      print(a == b);
-                                    });
-                                  },
-                                  items: evening_timeMap.keys
-                                      .map<DropdownMenuItem<String>>(
-                                          (String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
-                                    );
-                                  }).toList(),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // fromTime =
-                        //     glb.getDateTIme_sys(timeMap[FromValue].toString());
-                        // toTime =
-                        //     glb.getDateTIme_sys(timeMap[ToValue].toString());
-                        String f = fromTime;
-                        String t = toTime;
-                        print("from = $f");
-                        print("to = $t");
-                        UpdateAvailableTime(f, t);
-                        // print(
-                        //     glb.getDateTIme(glb.doctor.available_from));
-                        // print(glb.getDateTIme(glb.doctor.available_to));
-                      },
-                      child: Txt(text: "Set"),
-                    )
-                  ],
-                ),
-              ),
-            ),
-            Txt(text: "My timings"),
-            Divider(
-              color: Colours.divider_grey,
-            ),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(border: Border.all()),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 50,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: availableDates.length,
-                        itemBuilder: (context, index) {
-                          final date = availableDates[index];
-                          final isSelected = selectedDate == date;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedDate = date;
-                                print(selectedDate);
-                              });
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colours.HunyadiYellow
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  DateFormat('E dd').format(date),
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.black,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // ? morning
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Txt(text: "Morning")),
-                    Flexible(
-                      child: GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: currentWidth > 600 ? 5 : 3,
-                                  childAspectRatio: currentWidth > 600 ? 5 : 3),
-                          itemCount: myMorningMap.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: InkWell(
-                                onTap: () {
-                                  var t = myMorningMap.values
-                                      .elementAt(index)
-                                      .toString()
-                                      .split(".");
-
-                                  print(getID(t[0]));
-
-                                  if (searchTime(
-                                          myMorningMap.keys.elementAt(index)) ==
-                                      1) {
-                                    glb.ConfirmationBox(context,
-                                        "You want to unblock this slot?", () {
-                                      UnBookslot(getID(t[0]));
-                                    });
-                                  } else {
-                                    glb.ConfirmationBox(context,
-                                        "You want to block this slot ?", () {
-                                      var a = selectedDate.toString().isNotEmpty
-                                          ? "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}"
-                                          : glb.getDate_sys(
-                                              DateTime.now().toString());
-                                      var b = glb.getDateTIme_sys(myMorningMap
-                                          .values
-                                          .elementAt(index)
-                                          .toString());
-                                      b = b.toString().trim();
-                                      print("$a");
-                                      print("$a $b:00");
-                                      Bookslot(a, b);
-                                    });
-                                  }
-
-                                  // print("time map = $myTimingsMap");
-                                  // print(myTimingsMap[index]);
-                                  // setState(() {
-                                  //   if (myMap.containsKey(
-                                  //       myTimingsMap.keys.elementAt(index))) {
-                                  //   } else {
-                                  //     myMap[myTimingsMap.keys.elementAt(index)] =
-                                  //         myTimingsMap.values.elementAt(index);
-                                  //     List<MapEntry<String, DateTime>> sortedEntries =
-                                  //         myMap.entries.toList()
-                                  //           ..sort(
-                                  //               (a, b) => a.value.compareTo(b.value));
-                                  //     Map<String, DateTime> sortedMap =
-                                  //         Map.fromEntries(sortedEntries);
-                                  //     myMap = sortedMap;
-                                  //     // myList.add(timeList[index]);
-                                  //   }
-                                  // });
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                      color:
-                                          // myMap.keys
-                                          //         .contains(myTimingsMap.keys.elementAt(index))
-                                          searchTime(myMorningMap.keys
-                                                      .elementAt(index)) ==
-                                                  1
-                                              ? Colors.grey
-                                              : Colours.HunyadiYellow
-                                                  .withOpacity(.5),
-                                      borderRadius: BorderRadius.circular(10)),
-                                  constraints: BoxConstraints(maxWidth: 100),
-                                  width: 100,
-                                  child: Center(
-                                    child: Txt(
-                                      text: myMorningMap.keys
-                                          .elementAt(index)
-                                          .toString(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                    ),
-                    // ? afternoon
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Txt(text: "Afternoon")),
-                    Expanded(
-                      child: GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: currentWidth > 600 ? 5 : 3,
-                                  childAspectRatio: currentWidth > 600 ? 5 : 3),
-                          itemCount: myAfternoonMap.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: InkWell(
-                                onTap: () {
-                                  var t = myAfternoonMap.values
-                                      .elementAt(index)
-                                      .toString()
-                                      .split(".");
-
-                                  print(getID(t[0]));
-
-                                  if (searchTime(myAfternoonMap.keys
-                                          .elementAt(index)) ==
-                                      1) {
-                                    glb.ConfirmationBox(context,
-                                        "You want to unblock this slot?", () {
-                                      UnBookslot(getID(t[0]));
-                                    });
-                                  } else {
-                                    glb.ConfirmationBox(context,
-                                        "You want to block this slot ?", () {
-                                      var a = selectedDate.toString().isNotEmpty
-                                          ? "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}"
-                                          : glb.getDate_sys(
-                                              DateTime.now().toString());
-                                      var b = glb.getDateTIme_sys(myAfternoonMap
-                                          .values
-                                          .elementAt(index)
-                                          .toString());
-                                      b = b.toString().trim();
-                                      print("$a");
-                                      print("$a $b:00");
-                                      Bookslot(a, b);
-                                    });
-                                  }
-
-                                  // print("time map = $myTimingsMap");
-                                  // print(myTimingsMap[index]);
-                                  // setState(() {
-                                  //   if (myMap.containsKey(
-                                  //       myTimingsMap.keys.elementAt(index))) {
-                                  //   } else {
-                                  //     myMap[myTimingsMap.keys.elementAt(index)] =
-                                  //         myTimingsMap.values.elementAt(index);
-                                  //     List<MapEntry<String, DateTime>> sortedEntries =
-                                  //         myMap.entries.toList()
-                                  //           ..sort(
-                                  //               (a, b) => a.value.compareTo(b.value));
-                                  //     Map<String, DateTime> sortedMap =
-                                  //         Map.fromEntries(sortedEntries);
-                                  //     myMap = sortedMap;
-                                  //     // myList.add(timeList[index]);
-                                  //   }
-                                  // });
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                      color:
-                                          // myMap.keys
-                                          //         .contains(myTimingsMap.keys.elementAt(index))
-                                          searchTime(myAfternoonMap.keys
-                                                      .elementAt(index)) ==
-                                                  1
-                                              ? Colors.grey
-                                              : Colours.HunyadiYellow
-                                                  .withOpacity(.5),
-                                      borderRadius: BorderRadius.circular(10)),
-                                  constraints: BoxConstraints(maxWidth: 100),
-                                  width: 100,
-                                  child: Center(
-                                    child: Txt(
-                                      text: myAfternoonMap.keys
-                                          .elementAt(index)
-                                          .toString(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                    ),
-                    //  ? evening
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Txt(text: "Evening")),
-                    Expanded(
-                      child: GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: currentWidth > 600 ? 5 : 3,
-                                  childAspectRatio: currentWidth > 600 ? 5 : 3),
-                          itemCount: myEveningMap.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: InkWell(
-                                onTap: () {
-                                  var t = myEveningMap.values
-                                      .elementAt(index)
-                                      .toString()
-                                      .split(".");
-
-                                  print(getID(t[0]));
-
-                                  if (searchTime(
-                                          myEveningMap.keys.elementAt(index)) ==
-                                      1) {
-                                    glb.ConfirmationBox(context,
-                                        "You want to unblock this slot?", () {
-                                      UnBookslot(getID(t[0]));
-                                    });
-                                  } else {
-                                    glb.ConfirmationBox(context,
-                                        "You want to block this slot ?", () {
-                                      var a = selectedDate.toString().isNotEmpty
-                                          ? "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}"
-                                          : selectedDate.toString().isNotEmpty
-                                              ? "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}"
-                                              : glb.getDate_sys(
-                                                  DateTime.now().toString());
-                                      var b = glb.getDateTIme_sys(myEveningMap
-                                          .values
-                                          .elementAt(index)
-                                          .toString());
-                                      b = b.toString().trim();
-                                      print("a == $a");
-                                      print("b == $b");
-                                      print("$a $b:00");
-                                      Bookslot(a, b);
-                                    });
-                                  }
-
-                                  // print("time map = $myTimingsMap");
-                                  // print(myTimingsMap[index]);
-                                  // setState(() {
-                                  //   if (myMap.containsKey(
-                                  //       myTimingsMap.keys.elementAt(index))) {
-                                  //   } else {
-                                  //     myMap[myTimingsMap.keys.elementAt(index)] =
-                                  //         myTimingsMap.values.elementAt(index);
-                                  //     List<MapEntry<String, DateTime>> sortedEntries =
-                                  //         myMap.entries.toList()
-                                  //           ..sort(
-                                  //               (a, b) => a.value.compareTo(b.value));
-                                  //     Map<String, DateTime> sortedMap =
-                                  //         Map.fromEntries(sortedEntries);
-                                  //     myMap = sortedMap;
-                                  //     // myList.add(timeList[index]);
-                                  //   }
-                                  // });
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                      color:
-                                          // myMap.keys
-                                          //         .contains(myTimingsMap.keys.elementAt(index))
-                                          searchTime(myEveningMap.keys
-                                                      .elementAt(index)) ==
-                                                  1
-                                              ? Colors.grey
-                                              : Colours.HunyadiYellow
-                                                  .withOpacity(.5),
-                                      borderRadius: BorderRadius.circular(10)),
-                                  constraints: BoxConstraints(maxWidth: 100),
-                                  width: 100,
-                                  child: Center(
-                                    child: Txt(
-                                      text: myEveningMap.keys
-                                          .elementAt(index)
-                                          .toString(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                    )
-                  ],
-                ),
-              ),
-              // child: GridView.builder(
-              //     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              //         crossAxisCount: 5, childAspectRatio: 5),
-              //     itemCount: myTimingsMap.length,
-              //     itemBuilder: (context, index) {
-              //       return Padding(
-              //         padding: const EdgeInsets.all(8.0),
-              //         child: InkWell(
-              //           onTap: () {
-              //             var t = myTimingsMap.values
-              //                 .elementAt(index)
-              //                 .toString()
-              //                 .split(".");
-
-              //             print(getID(t[0]));
-
-              //             if (searchTime(myTimingsMap.keys.elementAt(index)) ==
-              //                 1) {
-              //               glb.ConfirmationBox(
-              //                   context, "You want to unblock this slot?", () {
-              //                 UnBookslot(getID(t[0]));
-              //               });
-              //             } else {
-              //               glb.ConfirmationBox(
-              //                   context, "You want to block this slot ?", () {
-              //                 var a =
-              //                     glb.getDate_sys(DateTime.now().toString());
-              //                 var b = glb.getDateTIme_sys(myTimingsMap.values
-              //                     .elementAt(index)
-              //                     .toString());
-              //                 b = b.toString().trim();
-              //                 print("$a");
-              //                 print("$a $b:00");
-              //                 Bookslot(a, b);
-              //               });
-              //             }
-
-              //             // print("time map = $myTimingsMap");
-              //             // print(myTimingsMap[index]);
-              //             // setState(() {
-              //             //   if (myMap.containsKey(
-              //             //       myTimingsMap.keys.elementAt(index))) {
-              //             //   } else {
-              //             //     myMap[myTimingsMap.keys.elementAt(index)] =
-              //             //         myTimingsMap.values.elementAt(index);
-              //             //     List<MapEntry<String, DateTime>> sortedEntries =
-              //             //         myMap.entries.toList()
-              //             //           ..sort(
-              //             //               (a, b) => a.value.compareTo(b.value));
-              //             //     Map<String, DateTime> sortedMap =
-              //             //         Map.fromEntries(sortedEntries);
-              //             //     myMap = sortedMap;
-              //             //     // myList.add(timeList[index]);
-              //             //   }
-              //             // });
-              //           },
-              //           child: Container(
-              //             decoration: BoxDecoration(
-              //                 color:
-              //                     // myMap.keys
-              //                     //         .contains(myTimingsMap.keys.elementAt(index))
-              //                     searchTime(myTimingsMap.keys
-              //                                 .elementAt(index)) ==
-              //                             1
-              //                         ? Colors.grey
-              //                         : Colours.HunyadiYellow.withOpacity(.5),
-              //                 borderRadius: BorderRadius.circular(10)),
-              //             constraints: BoxConstraints(maxWidth: 100),
-              //             width: 100,
-              //             child: Center(
-              //               child: Txt(
-              //                 text:
-              //                     myTimingsMap.keys.elementAt(index).toString(),
-              //               ),
-              //             ),
-              //           ),
-              //         ),
-              //       );
-              //     }),
-            ),
-          ],
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text("Loading...", style: TextStyle(fontSize: 16)),
+            ],
+          ),
         ),
-      )),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(4.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                SizedBox(height: 3.h),
+                _buildClinicTimingCard(),
+                SizedBox(height: 3.h),
+                _buildScheduleCard(),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  UpdateAvailableTime(String from, String to) async {
-    print("get book ");
-    // Uri url = Uri.parse(glb.API.baseURL + "book_video_slot");
-    Uri url = Uri.parse(glb.API.baseURL + glb.API.updateAvailability);
-    print(url);
-    try {
-      var res = await http.post(url, body: {
-        'doc_id':
-            '${glb.usrTyp == '1' ? glb.doctor.doc_id : glb.clinicBranchDoc.doc_id}',
-        'branch_doc': '${glb.usrTyp == '1' ? '0' : '1'}',
-        'available_from': "$from",
-        'available_to': "$to",
-        // "slot_time": "2024-04-29 09:30:00"
-      });
-      print(res.statusCode);
-      // print("bodyy?? ${res.body}");
-      // var bdy = jsonDecode(res.body);
-      // List b = jsonDecode(res.body);
-      if (res.statusCode == 200) {
-        glb.SuccessToast(context, "Done");
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 2.h),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios, size: 20),
+          ),
+          SizedBox(width: 2.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Schedule Management",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  "Manage your availability and time slots",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-        setState(() async {
-          if (glb.usrTyp == '1') {
-            await login_async();
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => DocHome_pg(
-                          pgNO: 2,
-                        )));
-            // setState(() {
-            //   print(
-            //       "previous: ${glb.doctor.available_from} - ${glb.doctor.available_to}");
-            //   glb.doctor.available_from = from + ":00";
-            //   glb.doctor.available_to = to + ":00";
-            //   print("after: $from - $to");
-            // });
-          } else {
-            await clinicLogin_async();
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => clinicHome_pg(
-                          pgNO: 5,
-                        )));
-            // setState(() {
-            //   print(
-            //       "previous: ${glb.clinicBranchDoc.available_from} - ${glb.clinicBranchDoc.available_to}");
-            //   glb.clinicBranchDoc.available_from = from + ":00";
-            //   glb.clinicBranchDoc.available_to = to + ":00";
-            //   print("after: $from - $to");
-            // });
-          }
+  Widget _buildClinicTimingCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(5.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.access_time, color: Colours.HunyadiYellow, size: 24),
+                SizedBox(width: 2.w),
+                Text(
+                  "Clinic Timing",
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 3.h),
+            _buildResponsiveTimeSelectors(),
+            SizedBox(height: 3.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _updateAvailableTime,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colours.HunyadiYellow,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 2.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 2,
+                ),
+                child: Text(
+                  "Update Timing",
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResponsiveTimeSelectors() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 600) {
+          // Desktop/Tablet layout
+          return Row(
+            children: [
+              Expanded(
+                  child: _buildTimeSelector(
+                      "From", fromValue, timeMap, _onFromTimeChanged)),
+              SizedBox(width: 4.w),
+              Expanded(
+                  child: _buildTimeSelector(
+                      "To", toValue, eveningTimeMap, _onToTimeChanged)),
+            ],
+          );
+        } else {
+          // Mobile layout
+          return Column(
+            children: [
+              _buildTimeSelector(
+                  "From", fromValue, timeMap, _onFromTimeChanged),
+              SizedBox(height: 2.h),
+              _buildTimeSelector(
+                  "To", toValue, eveningTimeMap, _onToTimeChanged),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildTimeSelector(String label, String value,
+      Map<String, DateTime> timeMap, Function(String?) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 1.h),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+              ),
+              onChanged: onChanged,
+              items: timeMap.keys.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScheduleCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: double.infinity,
+        height: 140.h,
+        child: Column(
+          children: [
+            _buildScheduleHeader(),
+            _buildDateSelector(),
+            Expanded(child: _buildTimeSlots()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScheduleHeader() {
+    return Container(
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_today, color: Colours.HunyadiYellow, size: 20),
+          SizedBox(width: 2.w),
+          Text(
+            "My Schedule",
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const Spacer(),
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
+              decoration: BoxDecoration(
+                color: Colours.HunyadiYellow.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                DateFormat('MMM d, yyyy').format(selectedDate),
+                style: TextStyle(
+                  color: Colours.HunyadiYellow,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateSelector() {
+    return Container(
+      height: 10.h,
+      padding: EdgeInsets.symmetric(vertical: 1.h),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 2.w),
+        itemCount: availableDates.length,
+        itemBuilder: (context, index) {
+          final date = availableDates[index];
+          final isSelected = selectedDate.day == date.day &&
+              selectedDate.month == date.month &&
+              selectedDate.year == date.year;
+          final isToday = date.day == DateTime.now().day &&
+              date.month == DateTime.now().month &&
+              date.year == DateTime.now().year;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedDate = date;
+              });
+              _loadBookedAppointments();
+            },
+            child: Container(
+              // height: 100.h,
+              margin: EdgeInsets.symmetric(horizontal: 1.w),
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              decoration: BoxDecoration(
+                color: isSelected ? Colours.HunyadiYellow : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isToday ? Colours.HunyadiYellow : Colors.grey.shade300,
+                  width: isToday ? 2 : 1,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat('E').format(date),
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.grey[600],
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 0.5.h),
+                  Text(
+                    DateFormat('dd').format(date),
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTimeSlots() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(4.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (myMorningMap.isNotEmpty) ...[
+            _buildTimeSlotSection("Morning", myMorningMap, Icons.wb_sunny),
+            SizedBox(height: 3.h),
+          ],
+          if (myAfternoonMap.isNotEmpty) ...[
+            _buildTimeSlotSection(
+                "Afternoon", myAfternoonMap, Icons.wb_sunny_outlined),
+            SizedBox(height: 3.h),
+          ],
+          if (myEveningMap.isNotEmpty) ...[
+            _buildTimeSlotSection("Evening", myEveningMap, Icons.nights_stay),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeSlotSection(
+      String title, Map<String, DateTime> timeMap, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 20),
+            SizedBox(width: 2.w),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 2.h),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth > 600 ? 5 : 3;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 2.5,
+                crossAxisSpacing: 2.w,
+                mainAxisSpacing: 1.h,
+              ),
+              itemCount: timeMap.length,
+              itemBuilder: (context, index) => _buildTimeSlot(timeMap, index),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimeSlot(Map<String, DateTime> timeMap, int index) {
+    final timeKey = timeMap.keys.elementAt(index);
+    final isBooked = _isTimeSlotBooked(timeKey);
+
+    return InkWell(
+      onTap: () => _handleTimeSlotTap(timeMap, index),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isBooked
+              ? Colors.grey[200]
+              : Colours.HunyadiYellow.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isBooked
+                ? Colors.grey[400]!
+                : Colours.HunyadiYellow.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            timeKey,
+            style: TextStyle(
+              color: isBooked ? Colors.grey[600] : Colours.HunyadiYellow,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Event handlers
+  void _onFromTimeChanged(String? value) {
+    if (value != null) {
+      setState(() {
+        fromValue = value;
+        fromTime = glb.getDateTIme_sys(timeMap[value].toString());
+      });
+    }
+  }
+
+  void _onToTimeChanged(String? value) {
+    if (value != null) {
+      setState(() {
+        toValue = value;
+        toTime = glb.getDateTIme_sys(eveningTimeMap[value].toString());
+      });
+    }
+  }
+
+  void _updateAvailableTime() {
+    final from = fromTime;
+    final to = toTime;
+    print("Updating time from $from to $to");
+    _updateAvailableTimeAPI(from, to);
+  }
+
+  void _handleTimeSlotTap(Map<String, DateTime> timeMap, int index) {
+    final timeKey = timeMap.keys.elementAt(index);
+    final timeValue = timeMap.values.elementAt(index);
+    final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(timeValue);
+
+    if (_isTimeSlotBooked(timeKey)) {
+      final appointmentId = _getAppointmentId(formattedTime);
+      if (appointmentId.isNotEmpty) {
+        glb.ConfirmationBox(context, "Do you want to unblock this slot?", () {
+          _unBookSlot(appointmentId, timeKey);
+        });
+      } else {
+        glb.errorToast(context, "Could not find appointment ID");
+      }
+    } else {
+      glb.ConfirmationBox(context, "Do you want to block this slot?", () {
+        final date = DateFormat('yyyy-MM-dd').format(selectedDate);
+        final time = glb.getDateTIme_sys(timeValue.toString()).trim();
+        _bookSlot(date, time, timeKey);
+      });
+    }
+  }
+
+  bool _isTimeSlotBooked(String timeKey) {
+    return bookedAppointments.any((appointment) {
+      return glb.getDateTIme(appointment.time) == timeKey;
+    });
+  }
+
+  String _getAppointmentId(String timeStr) {
+    final timePart = timeStr.split(' ')[1];
+
+    for (var appointment in bookedAppointments) {
+      final appointmentTimePart = appointment.time.split(' ')[1];
+      if (appointmentTimePart == timePart) {
+        return appointment.ID;
+      }
+    }
+    return "";
+  }
+
+  // API methods
+  Future<void> _updateAvailableTimeAPI(String from, String to) async {
+    try {
+      final url = Uri.parse(glb.API.baseURL + glb.API.updateAvailability);
+      final response = await http.post(url, body: {
+        'doc_id':
+            glb.usrTyp == '1' ? glb.doctor.doc_id : glb.clinicBranchDoc.doc_id,
+        'branch_doc': glb.usrTyp == '1' ? '0' : '1',
+        'available_from': from,
+        'available_to': to,
+      });
+
+      if (response.statusCode == 200) {
+        glb.SuccessToast(context, "Timing updated successfully");
+
+        if (glb.usrTyp == '1') {
+          await _loginAsync();
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => DocHome_pg(pgNO: 2)));
+        } else {
+          await _clinicLoginAsync();
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => clinicHome_pg(pgNO: 5)));
+        }
+      }
+    } catch (e) {
+      print("Exception updating available time: $e");
+      glb.errorToast(context, "Failed to update timing");
+    }
+  }
+
+  Future<void> _bookSlot(String date, String time, String timeKey) async {
+    try {
+      final url = Uri.parse(glb.API.baseURL + "book_video_slot");
+      final response = await http.post(url, body: {
+        'doctor_id':
+            glb.usrTyp == '1' ? glb.doctor.doc_id : glb.clinicBranchDoc.doc_id,
+        'branch_doc': glb.usrTyp == '1' ? '0' : '1',
+        'date': date,
+        'slot_time': "$date $time:00"
+      });
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        Navigator.pop(context);
+        glb.SuccessToast(context, "Slot blocked successfully");
+
+        setState(() {
+          bookedAppointments.add(BookedAppointments_model(
+              ID: responseData[0]['id'].toString(), time: "$date $time:00"));
         });
       }
-      // print(bdy);
-      // print(b.length);
     } catch (e) {
-      print("Exception => $e");
+      print("Exception booking slot: $e");
+      glb.errorToast(context, "Failed to book slot");
     }
   }
 
-  Bookslot(String dt, String tm) async {
-    print("get book ");
-    Uri url = Uri.parse(glb.API.baseURL + "book_video_slot");
-    // Uri url = Uri.parse(glb.API.baseURL + "get_video_slot");
-    print(url);
-    print("dt = $dt");
-    print("tm = $tm");
+  Future<void> _unBookSlot(String id, String timeKey) async {
     try {
-      var res = await http.post(url, body: {
-        'doctor_id':
-            '${glb.usrTyp == '1' ? glb.doctor.doc_id : glb.clinicBranchDoc.doc_id}',
-        'branch_doc': '${glb.usrTyp == '1' ? '0' : '1'}',
-        'date': "$dt",
-        "slot_time": "$dt " + "$tm:00"
-      });
-      print(res.statusCode);
-      var bdy = jsonDecode(res.body);
-      List b = jsonDecode(res.body);
-      if (res.statusCode == 200) {
+      final url = Uri.parse(glb.API.baseURL + "del_video_slot");
+      final response = await http.post(url, body: {'ID': id});
+
+      if (response.statusCode == 200) {
         Navigator.pop(context);
-        glb.SuccessToast(context, "Done");
-        getBookedVideoAppointments();
+        glb.SuccessToast(context, "Slot unblocked successfully");
+
+        setState(() {
+          bookedAppointments.removeWhere((appointment) => appointment.ID == id);
+        });
       }
-      print(bdy);
-      print(b.length);
     } catch (e) {
-      print("Exception => $e");
+      print("Exception unbooking slot: $e");
+      glb.errorToast(context, "Failed to unblock slot");
     }
   }
 
-  UnBookslot(
-    String id,
-  ) async {
-    print("get book ");
-    Uri url = Uri.parse(glb.API.baseURL + "del_video_slot");
-    // Uri url = Uri.parse(glb.API.baseURL + "get_video_slot");
-    print(url);
+  Future<void> _loginAsync() async {
     try {
-      var res = await http.post(url, body: {
-        'ID': '$id',
-      });
-      print(res.statusCode);
-      var bdy = jsonDecode(res.body);
-      List b = jsonDecode(res.body);
-      if (res.statusCode == 200) {
-        Navigator.pop(context);
-        glb.SuccessToast(context, "Done");
-        getBookedVideoAppointments();
-      }
-      print(bdy);
-      print(b.length);
-    } catch (e) {
-      print("Exception => $e");
-    }
-  }
-
-  List<BookedAppointments_model> bam = [];
-  getBookedVideoAppointments() async {
-    bam = [];
-    print("get book ");
-    // Uri url = Uri.parse(glb.API.baseURL + "book_video_slot");
-    Uri url = Uri.parse(glb.API.baseURL + "get_video_slot");
-    print(url);
-    try {
-      var res = await http.post(url, body: {
-        'doctor_id':
-            '${glb.usrTyp == '1' ? glb.doctor.doc_id : glb.clinicBranchDoc.doc_id}',
-        'date': "${glb.getDate_sys(DateTime.now().toString())}",
-        'branch_doc': '${glb.usrTyp == '1' ? '0' : '1'}',
-        // "slot_time": "2024-04-29 09:30:00"
-      });
-      print(res.statusCode);
-      var bdy = jsonDecode(res.body);
-      List b = jsonDecode(res.body);
-      for (int i = 0; i < b.length; i++) {
-        bam.add(BookedAppointments_model(
-            ID: bdy[i]['id'].toString(), time: bdy[i]['slot_time'].toString()));
-      }
-      setState(() {
-        glb.Models.BookedAppointments_lst = bam;
-      });
-      print(bdy);
-      print(b.length);
-    } catch (e) {
-      print("Exception => $e");
-    }
-  }
-
-  login_async() async {
-    print("Login async ");
-    Uri url = Uri.parse(glb.API.baseURL + glb.API.login);
-    if (glb.usrTyp == '2') {
-      url = Uri.parse(glb.API.baseURL + glb.API.Clogin);
-    } else if (glb.usrTyp == '1') {
-      url = Uri.parse(glb.API.baseURL + glb.API.Dlogin);
-    }
-    try {
-      var res = await http.post(
+      final url = Uri.parse(glb.API.baseURL + glb.API.Dlogin);
+      final response = await http.post(
         url,
-        headers: {
-          'accept': 'application/json',
-        },
+        headers: {'accept': 'application/json'},
         body: {
           '_token': '{{ csrf_token() }}',
-          // 'data': '123456789',
-          'data': '${glb.doctor.mobile_no}',
+          'data': glb.doctor.mobile_no,
         },
       );
-      print(res.statusCode);
-      var bdy = jsonDecode(res.body);
-      print(bdy);
-      if (bdy.length == 0) {
-        glb.errorToast(context, "Account not found\nRegister to get started");
-        Navigator.pop(context);
-      }
-      if (glb.usrTyp == '2') {
-        setState(() {
-          glb.clinic.clinic_id = bdy[0]['ID'].toString();
-          glb.clinic.clinic_name = bdy[0]['clinic_name'].toString();
-          glb.clinic.contact_no = bdy[0]['mobile_no'].toString();
-          glb.clinic.pswd = bdy[0]['pswd'].toString();
-          glb.clinic.email_id = bdy[0]['email_id'].toString();
-          glb.clinic.address = bdy[0]['address'].toString();
-          glb.clinic.img1 = "${glb.API.baseURL}images/clinic_images/" +
-              bdy[0]['img1'].toString();
-          glb.clinic.img2 = "${glb.API.baseURL}images/clinic_images/" +
-              bdy[0]['img2'].toString();
-          glb.clinic.img3 = "${glb.API.baseURL}images/clinic_images/" +
-              bdy[0]['img3'].toString();
-          glb.clinic.img4 = "${glb.API.baseURL}images/clinic_images/" +
-              bdy[0]['img4'].toString();
-          glb.clinic.img5 = "${glb.API.baseURL}images/clinic_images/" +
-              bdy[0]['img5'].toString();
-        });
-        if (glb.doctor.pswd == glb.clinic.pswd) {
-        } else {
-          glb.errorToast(context, "Wrong password");
-          Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData.isEmpty) {
+          glb.errorToast(context, "Account not found");
+          return;
         }
-      } else if (glb.usrTyp == '1') {
-        print("Verified hai kya? ${bdy[0]['verified'].toString()}");
-        if (bdy[0]['verified'].toString() == '0') {
-          Navigator.pop(context);
+
+        final userData = responseData[0];
+        if (userData['verified'].toString() == '0') {
           glb.ConfirmationBox(context, "You are not yet verified", () {
             Navigator.pop(context);
           });
-        } else {
-          setState(
-            () {
-              glb.doctor.doc_id = bdy[0]['ID'].toString();
-              glb.doctor.name = bdy[0]['Name'].toString();
-              glb.doctor.mobile_no = bdy[0]['mobile_no'].toString();
-              glb.doctor.email = bdy[0]['email_id'].toString();
-              glb.doctor.pswd = bdy[0]['pswd'].toString();
-              glb.doctor.speciality = bdy[0]['Speciality'].toString();
-              glb.doctor.Degree = bdy[0]['Degree'].toString();
-              glb.doctor.clinic_id = bdy[0]['clinic_id'].toString();
-              glb.doctor.available = bdy[0]['available'].toString();
-              glb.doctor.rating = bdy[0]['Rating'].toString();
-              glb.doctor.img = "${glb.API.baseURL}images/doctor_images/" +
-                  bdy[0]['doctor_img'].toString();
-              glb.doctor.img1 = "${glb.API.baseURL}images/doctor_images/" +
-                  bdy[0]['img1'].toString();
-              glb.doctor.img2 = "${glb.API.baseURL}images/doctor_images/" +
-                  bdy[0]['img2'].toString();
-              glb.doctor.img3 = "${glb.API.baseURL}images/doctor_images/" +
-                  bdy[0]['img3'].toString();
-              glb.doctor.img4 = "${glb.API.baseURL}images/doctor_images/" +
-                  bdy[0]['img4'].toString();
-              glb.doctor.IDProof = "${glb.API.baseURL}images/doctor_images/" +
-                  bdy[0]['ID_proof'].toString();
-              glb.doctor.degree_certificate =
-                  "${glb.API.baseURL}images/doctor_images/" +
-                      bdy[0]['degree_certificate'].toString();
-              glb.doctor.medical_council_certificate =
-                  "${glb.API.baseURL}images/doctor_images/" +
-                      bdy[0]['medical_council_certificate'].toString();
-              glb.doctor.available_from = bdy[0]['available_from'].toString();
-              glb.doctor.available_to = bdy[0]['available_to'].toString();
-              glb.doctor.address = bdy[0]['address'].toString();
-            },
-          );
+          return;
         }
+
+        // Update doctor data
+        setState(() {
+          glb.doctor.doc_id = userData['ID'].toString();
+          glb.doctor.name = userData['Name'].toString();
+          glb.doctor.mobile_no = userData['mobile_no'].toString();
+          glb.doctor.email = userData['email_id'].toString();
+          glb.doctor.pswd = userData['pswd'].toString();
+          glb.doctor.speciality = userData['Speciality'].toString();
+          glb.doctor.Degree = userData['Degree'].toString();
+          glb.doctor.available_from = userData['available_from'].toString();
+          glb.doctor.available_to = userData['available_to'].toString();
+          // Add other fields as needed
+        });
       }
     } catch (e) {
-      print("Exception => $e");
+      print("Exception in login: $e");
     }
   }
 
-  clinicLogin_async() async {
-    print("clinic login async");
-    Uri url = Uri.parse(glb.API.baseURL + "getCliniLogin");
+  Future<void> _clinicLoginAsync() async {
     try {
-      var res = await http.post(
-        url,
-        body: {
-          'user_name': glb.clinicBranchDoc.usr_nm,
-        },
-      );
+      final url = Uri.parse(glb.API.baseURL + "getCliniLogin");
+      final response = await http.post(url, body: {
+        'user_name': glb.clinicBranchDoc.usr_nm,
+      });
 
-      // print("stat = ${res.statusCode}");
-      // print("body = ${res.body}");
-      print("?? ${res.body}");
-      if (res.body.isEmpty || res.body.toString() == "none") {
-        Navigator.pop(context);
+      if (response.body.isEmpty || response.body == "none") {
         glb.errorToast(context, "User not found");
-      } else {
-        var bdy = jsonDecode(res.body);
-        var body = bdy[0];
-        if (glb.clinicBranchDoc.pswd == body['password'].toString()) {
-          glb.clinicRole = bdy[0]['role'].toString();
-          if (bdy[0]['role'].toString() == '0') {
-            glb.clinic.clinic_id = body['ID'].toString();
-            glb.clinic.usr_nm = body['user_name'].toString();
-            glb.clinic.clinic_name = body['clinic_name'].toString();
-            glb.clinic.contact_no = body['mobile_no'].toString();
-            glb.clinic.pswd = body['password'].toString();
-            glb.clinic.email_id = body['email_id'].toString();
-            glb.clinic.address = body['address'].toString();
-            glb.clinic.img1 = "${glb.API.baseURL}images/clinic_images/" +
-                body['img1'].toString();
-            glb.clinic.img2 = "${glb.API.baseURL}images/clinic_images/" +
-                body['img2'].toString();
-            glb.clinic.img3 = "${glb.API.baseURL}images/clinic_images/" +
-                body['img3'].toString();
-            glb.clinic.img4 = "${glb.API.baseURL}images/clinic_images/" +
-                body['img4'].toString();
-            glb.clinic.img5 = "${glb.API.baseURL}images/clinic_images/" +
-                body['img5'].toString();
-          } else if (bdy[0]['role'].toString() == '1') {
-            glb.clinicBranch.branch_id = body['branch_id'].toString();
-            glb.clinicBranch.usr_nm = body['user_name'].toString();
-            glb.clinicBranch.pswd = body['password'].toString();
-            glb.clinicBranch.credentials_id = body['credentials_id'].toString();
-            glb.clinicBranch.clinic_name = body['name'].toString();
-            glb.clinicBranch.contact_no = body['mob_no'].toString();
-            glb.clinicBranch.email_id = body['email_id'].toString();
-            glb.clinicBranch.clinicAddress = body['address'].toString();
-
-            glb.clinicBranch.img1 = "${glb.API.baseURL}images/branch_images/" +
-                bdy[0]['img1'].toString();
-            glb.clinicBranch.img2 = "${glb.API.baseURL}images/branch_images/" +
-                bdy[0]['img2'].toString();
-            glb.clinicBranch.img3 = "${glb.API.baseURL}images/branch_images/" +
-                bdy[0]['img3'].toString();
-            glb.clinicBranch.img4 = "${glb.API.baseURL}images/branch_images/" +
-                bdy[0]['img4'].toString();
-            glb.clinicBranch.img5 = "${glb.API.baseURL}images/branch_images/" +
-                bdy[0]['img5'].toString();
-
-            print("Here");
-          } else if (bdy[0]['role'].toString() == '2') {
-            setState(() {
-              glb.clinicBranchDoc.doc_id = body['id'].toString();
-              glb.clinicBranchDoc.usr_nm = body['user_name'].toString();
-              glb.clinicBranchDoc.pswd = body['password'].toString();
-              glb.clinicBranchDoc.credentials_id =
-                  body['credentials_id'].toString();
-              glb.clinicBranchDoc.branch_id = body['branch_id'].toString();
-              glb.clinicBranchDoc.name = body['name'].toString();
-              glb.clinicBranchDoc.mobile_no = body['mob_no'].toString();
-              glb.clinicBranchDoc.email = body['email'].toString();
-              glb.clinicBranchDoc.Degree = body['degree'].toString();
-              glb.clinicBranchDoc.speciality = body['speciality'].toString();
-              glb.clinicBranchDoc.img1 =
-                  "${glb.API.baseURL}images/branchDoc_images/" +
-                      bdy[0]['img1'].toString();
-              glb.clinicBranchDoc.img2 =
-                  "${glb.API.baseURL}images/branchDoc_images/" +
-                      bdy[0]['img2'].toString();
-              glb.clinicBranchDoc.img3 =
-                  "${glb.API.baseURL}images/branchDoc_images/" +
-                      bdy[0]['img3'].toString();
-              glb.clinicBranchDoc.img4 =
-                  "${glb.API.baseURL}images/branchDoc_images/" +
-                      bdy[0]['img4'].toString();
-              glb.clinicBranchDoc.img5 =
-                  "${glb.API.baseURL}images/branchDoc_images/" +
-                      bdy[0]['img5'].toString();
-              glb.clinicBranchDoc.address = bdy[0]['branch_address'].toString();
-              glb.clinicBranchDoc.available_from =
-                  bdy[0]['available_from'].toString();
-              glb.clinicBranchDoc.available_to =
-                  bdy[0]['available_to'].toString();
-            });
-          }
-        } else {
-          glb.errorToast(context, "Wrong password");
-        }
+        return;
       }
-    } catch (e) {}
-  }
-}
 
-searchTime(String key) {
-  var r = 0;
+      final responseData = jsonDecode(response.body);
+      final userData = responseData[0];
 
-  for (int i = 0; i < glb.Models.BookedAppointments_lst.length; i++) {
-    var a = glb.getDateTIme(glb.Models.BookedAppointments_lst[i].time);
+      if (glb.clinicBranchDoc.pswd == userData['password'].toString()) {
+        glb.clinicRole = userData['role'].toString();
 
-    if (a == key) {
-      print("kwy " + key);
-      print("a = $a");
-      r = 1;
-      break;
+        // Update clinic data based on role
+        if (userData['role'].toString() == '2') {
+          setState(() {
+            glb.clinicBranchDoc.available_from =
+                userData['available_from'].toString();
+            glb.clinicBranchDoc.available_to =
+                userData['available_to'].toString();
+            // Add other fields as needed
+          });
+        }
+      } else {
+        glb.errorToast(context, "Wrong password");
+      }
+    } catch (e) {
+      print("Exception in clinic login: $e");
     }
   }
-  return r;
 }
 
-getID(String key) {
-  print("getting id");
-  var a = "";
-  print(key);
-  for (int i = 0; i < glb.Models.BookedAppointments_lst.length; i++) {
-    print(glb.Models.BookedAppointments_lst[i].time);
-    if (key == glb.Models.BookedAppointments_lst[i].time) {
-      print("here");
-      a = glb.Models.BookedAppointments_lst[i].ID;
-      print(a);
-      break;
-    }
-  }
-  return a;
-}
-
-List<String> generateTimeList(int st, int et) {
+// Utility functions
+List<String> generateTimeList(int startHour, int endHour) {
   List<String> timeList = [];
-  DateTime startTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, st, 0);
-  DateTime endTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, et, 0);
+  DateTime startTime = DateTime(DateTime.now().year, DateTime.now().month,
+      DateTime.now().day, startHour, 0);
+  DateTime endTime = DateTime(DateTime.now().year, DateTime.now().month,
+      DateTime.now().day, endHour, 0);
 
   while (startTime.isBefore(endTime)) {
     timeList.add(DateFormat('h:mm a').format(startTime));
-    startTime = startTime.add(Duration(minutes: 30));
+    startTime = startTime.add(const Duration(minutes: 30));
   }
 
   return timeList;
 }
 
-Map<String, DateTime> generateTimeMap(int st, int et) {
-  Map<String, DateTime> timeList = {};
-  DateTime startTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, st, 0);
-  DateTime endTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, et, 0);
+Map<String, DateTime> generateTimeMap(int startHour, int endHour) {
+  Map<String, DateTime> timeMap = {};
+  DateTime startTime = DateTime(DateTime.now().year, DateTime.now().month,
+      DateTime.now().day, startHour, 0);
+  DateTime endTime = DateTime(DateTime.now().year, DateTime.now().month,
+      DateTime.now().day, endHour, 0);
 
   while (startTime.isBefore(endTime)) {
-    timeList[DateFormat('h:mm a').format(startTime)] = startTime;
-
-    startTime = startTime.add(Duration(minutes: 30));
+    timeMap[DateFormat('h:mm a').format(startTime)] = startTime;
+    startTime = startTime.add(const Duration(minutes: 30));
   }
 
-  return timeList;
+  return timeMap;
 }
 
 Map<String, DateTime> generateTimeMap1(
-  int st,
-  int sm,
-  int et,
-  int em,
-) {
-  Map<String, DateTime> timeList = {};
-  DateTime startTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, st, sm);
-  DateTime endTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, et, em);
+    int startHour, int startMinute, int endHour, int endMinute) {
+  Map<String, DateTime> timeMap = {};
+  myMorningMap.clear();
+  myAfternoonMap.clear();
+  myEveningMap.clear();
 
-  while (startTime.isBefore(endTime.add(Duration(minutes: 30)))) {
-    timeList[DateFormat('h:mm a').format(startTime)] = startTime;
+  DateTime startTime = DateTime(DateTime.now().year, DateTime.now().month,
+      DateTime.now().day, startHour, startMinute);
+  DateTime endTime = DateTime(DateTime.now().year, DateTime.now().month,
+      DateTime.now().day, endHour, endMinute);
+
+  while (startTime.isBefore(endTime.add(const Duration(minutes: 30)))) {
+    final timeKey = DateFormat('h:mm a').format(startTime);
+    timeMap[timeKey] = startTime;
+
     if (startTime.hour < 12) {
-      myMorningMap[DateFormat('h:mm a').format(startTime)] = startTime;
+      myMorningMap[timeKey] = startTime;
     } else if (startTime.hour >= 12 && startTime.hour < 17) {
-      myAfternoonMap[DateFormat('h:mm a').format(startTime)] = startTime;
+      myAfternoonMap[timeKey] = startTime;
     } else if (startTime.hour >= 17) {
-      myEveningMap[DateFormat('h:mm a').format(startTime)] = startTime;
+      myEveningMap[timeKey] = startTime;
     }
-    startTime = startTime.add(Duration(minutes: 30));
+
+    startTime = startTime.add(const Duration(minutes: 30));
   }
 
-  return timeList;
+  return timeMap;
 }

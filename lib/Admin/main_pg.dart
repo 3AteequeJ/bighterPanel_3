@@ -2,12 +2,9 @@ import 'package:bighter_panel/Admin/SideMenuPages/doctors/VerifiedDoctors/doctor
 import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/sizer.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
-import 'package:easy_sidemenu/easy_sidemenu.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
-import 'package:bighter_panel/Admin/Home_pg.dart' as hp;
 
 class Main_pg extends StatefulWidget {
   const Main_pg({super.key});
@@ -19,124 +16,120 @@ class Main_pg extends StatefulWidget {
 class _Main_pgState extends State<Main_pg> {
   @override
   Widget build(BuildContext context) {
-    var currentWidth = MediaQuery.of(context).size.width;
-    return Container(
-      child: Padding(
-        padding: EdgeInsets.all(Sizer.Pad),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: Sizer.w_20 / 3,
-                runSpacing: Sizer.h_10,
+    final isMobile = MediaQuery.of(context).size.width <= 600;
+
+    return Padding(
+      padding: EdgeInsets.all(Sizer.Pad),
+      child: SingleChildScrollView(
+        child: Wrap(
+          spacing: Sizer.w_20 / 3,
+          runSpacing: Sizer.h_10,
+          children: [
+            _DashboardCard(
+              color: Colours.orange,
+              image: "assets/images/inClinic.png",
+              label: "Total Clinics",
+              value: "${glb.Tclinics}",
+              isMobile: isMobile,
+            ),
+            _DashboardCard(
+              color: Colours.green,
+              image: "assets/images/docs.png",
+              label: "Total Doctors",
+              value: "${glb.Tdocs}",
+              isMobile: isMobile,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => allDocs_pg()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardCard extends StatelessWidget {
+  final Color color;
+  final String image;
+  final String label;
+  final String value;
+  final bool isMobile;
+  final VoidCallback? onTap;
+
+  const _DashboardCard({
+    required this.color,
+    required this.image,
+    required this.label,
+    required this.value,
+    required this.isMobile,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: isMobile ? 100.w : 26.04.w,
+        height: Sizer.h_50 * 2.5,
+        padding: EdgeInsets.all(Sizer.Pad / 2),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(2.5.w),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.9), color.withOpacity(0.7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: isMobile ? 20.w : Sizer.w_50 * 2,
+              child: Image.asset(image, fit: BoxFit.contain),
+            ),
+            SizedBox(width: Sizer.w_10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colours.orange,
-                      borderRadius: BorderRadius.circular(2.77.w),
-                    ),
-                    height: Sizer.h_50 * 2.5,
-                    width: currentWidth <= 600 ? 100.w : 26.04.w,
-                    // constraints: BoxConstraints(minHeight: 100, minWidth: 100),
-                    child: Padding(
-                      padding: EdgeInsets.all(Sizer.Pad / 2),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(
-                              width:
-                                  currentWidth <= 600 ? 20.w : Sizer.w_50 * 2,
-                              child: Image.asset("assets/images/inClinic.png")),
-                          SizedBox(
-                            width: Sizer.w_20 / 2,
-                          ),
-                          Expanded(
-                              child: Txt(
-                            text: "Total Clinics",
-                            size: 12,
-                          )),
-                          Container(
-                            height: 50,
-                            width: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(.5),
-                              borderRadius: BorderRadius.circular(0.55.w),
-                            ),
-                            child: Center(
-                                child: Txt(
-                              text: "${glb.Tclinics}",
-                              // fontColour: Colours.orange,
-                              fntWt: FontWeight.bold,
-                            )),
-                          ),
-                        ],
-                      ),
-                    ),
+                  Txt(
+                    text: label,
+                    size: 14.sp,
+                    fntWt: FontWeight.w500,
+                    fontColour: Colors.white,
                   ),
+                  SizedBox(height: 1.h),
                   Container(
-                    height: Sizer.h_50 * 2.5,
-                    width: currentWidth <= 600 ? 100.w : 26.04.w,
+                    height: 50,
+                    width: 50,
                     decoration: BoxDecoration(
-                      color: Colours.green,
-                      borderRadius: BorderRadius.circular(Sizer.radius_10 / 5),
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(1.w),
                     ),
-                    // constraints: BoxConstraints(minHeight: 100, minWidth: 100),
-                    child: Padding(
-                      padding: EdgeInsets.all(Sizer.Pad / 2),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => allDocs_pg()));
-                            },
-                            child: SizedBox(
-                                 width: currentWidth <= 600 ? 20.w : Sizer.w_50 * 2,
-                                child: Image.asset("assets/images/docs.png")),
-                          ),
-                          SizedBox(
-                            width: Sizer.w_20 / 2,
-                          ),
-                          Expanded(
-                            child: Txt(
-                              text: "Total doctors",
-                              size: 12,
-                            ),
-                          ),
-                          Container(
-                            height: 50,
-                            width: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(.5),
-                              borderRadius: BorderRadius.circular(0.55.w),
-                            ),
-                            child: Center(
-                              child: Txt(
-                                text: "${glb.Tdocs}",
-                                // fontColour: Colours.green,
-                                fntWt: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          // CircleAvatar(
-                          //   backgroundColor: Colors.white.withOpacity(.5),
-                          //   child: Padding(
-                          //     padding: EdgeInsets.all(Sizer.Pad / 3),
-                          //     child: Txt(text: "06"),
-                          //   ),
-                          // )
-                        ],
+                    child: Center(
+                      child: Txt(
+                        text: value,
+                        fntWt: FontWeight.bold,
+                        size: 16.sp,
+                        fontColour: Colors.black,
                       ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

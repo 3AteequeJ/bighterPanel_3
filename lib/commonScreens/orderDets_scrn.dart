@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bighter_panel/Admin/Home_pg.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
 import 'package:bighter_panel/models/allOrders_model.dart';
 import 'package:bighter_panel/models/orderDet_model.dart';
@@ -225,47 +226,89 @@ class _OrderDetailsScrnState extends State<OrderDetailsScrn> {
                         ),
                       ),
                     ),
-                    orderDetails.first.status == '-2'
-                        ? ElevatedButton(
-                            onPressed: () {
-                              glb.ConfirmationBox(
-                                  context, 'You have shipped this product/s',
-                                  () {
-                                UpdateStatus_async();
-                              });
-                            },
-                            child: Txt(text: "Shipped"),
-                          )
-                        : orderDetails.first.status == '-1'
-                            ? ElevatedButton(
-                                onPressed: () {
-                                  glb.ConfirmationBox(context,
-                                      'You have delivered this product/s', () {
-                                    UpdateStatus_async();
-                                  });
-                                },
-                                child: Txt(text: "Delivered"),
-                              )
-                            : Container()
+                    if (glb.usrTyp != '0')
+                      (orderDetails.first.status == '-2'
+                          ? ElevatedButton(
+                              onPressed: () {
+                                glb.ConfirmationBox(
+                                    context, 'You have shipped this product/s',
+                                    () {
+                                  UpdateStatus_async();
+                                });
+                              },
+                              child: Txt(text: "Shipped"),
+                            )
+                          : orderDetails.first.status == '-1'
+                              ? ElevatedButton(
+                                  onPressed: () {
+                                    glb.ConfirmationBox(context,
+                                        'You have delivered this product/s',
+                                        () {
+                                      UpdateStatus_async();
+                                    });
+                                  },
+                                  child: Txt(text: "Delivered"),
+                                )
+                              : Container()),
+                    if (glb.usrTyp == '0')
+                      (widget.orderDetails.status == '-1'
+                          ? ElevatedButton(
+                              onPressed: () {
+                                glb.ConfirmationBox(
+                                    context, 'You have shipped this product/s',
+                                    () {
+                                  UpdateStatus_async();
+                                });
+                              },
+                              child: Txt(text: "Shipped"),
+                            )
+                          : widget.orderDetails.status == '0'
+                              ? ElevatedButton(
+                                  onPressed: () {
+                                    glb.ConfirmationBox(context,
+                                        'You have delivered this product/s',
+                                        () {
+                                      UpdateStatus_async();
+                                    });
+                                  },
+                                  child: Txt(text: "Delivered"),
+                                )
+                              : Container()),
                   ],
                 ),
               ));
   }
 
   UpdateStatus_async() async {
-    Uri url = Uri.parse(glb.API.baseURL + glb.API.updateOrderStatus);
-    var res = await http.post(url, body: {
-      "order_id": widget.orderDetails.orderId,
-      "doc_id":
-          glb.usrTyp == '1' ? glb.doctor.doc_id : glb.clinicBranchDoc.doc_id,
-      'branch_doc': glb.usrTyp == '1' ? '0' : '1',
-      "status": orderDetails.first.status == '-2' ? '-1' : '0',
-    });
+    print(widget.orderDetails.status);
+    Uri url = glb.usrTyp == '0'
+        ? Uri.parse(glb.API.baseURL + glb.API.OrderStatusUpdate)
+        : Uri.parse(glb.API.baseURL + glb.API.updateOrderStatus);
+    var res = await http.post(url,
+        body: glb.usrTyp == '0'
+            ? {
+                "id": widget.orderDetails.orderId,
+                "status": widget.orderDetails.status == '-1' ? '0' : '1',
+              }
+            : {
+                "order_id": widget.orderDetails.orderId,
+                "doc_id": glb.usrTyp == '1'
+                    ? glb.doctor.doc_id
+                    : glb.clinicBranchDoc.doc_id,
+                'branch_doc': glb.usrTyp == '1' ? '0' : '1',
+                "status": widget.orderDetails.status == '-2' ? '-1' : '0',
+              });
 
     if (res.statusCode == 200) {
       print("Order status updated successfully");
-      getOrderDets();
-      Navigator.pop(context);
+      // getOrderDets();
+      // Navigator.pop(context);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => adminHome_pg(
+                    pgNO: 8,
+                  )));
     } else {
       print("Failed to update order status");
     }
