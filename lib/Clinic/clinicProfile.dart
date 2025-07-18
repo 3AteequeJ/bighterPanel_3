@@ -22,14 +22,14 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:bighter_panel/Utils/global.dart' as glb;
 import 'package:http/http.dart' as http;
 
-class profile_settings extends StatefulWidget {
-  const profile_settings({super.key});
+class Clinicprofile_settings extends StatefulWidget {
+  const Clinicprofile_settings({super.key});
 
   @override
-  State<profile_settings> createState() => _profile_settingsState();
+  State<Clinicprofile_settings> createState() => _Clinicprofile_settingsState();
 }
 
-class _profile_settingsState extends State<profile_settings> {
+class _Clinicprofile_settingsState extends State<Clinicprofile_settings> {
   TextEditingController nm_cont = TextEditingController();
   TextEditingController mobno_cont = TextEditingController();
   TextEditingController mail_cont = TextEditingController();
@@ -101,14 +101,17 @@ class _profile_settingsState extends State<profile_settings> {
                                 radius: Sizer.radius_10 * 5,
                                 backgroundColor: Colours.HunyadiYellow,
                                 backgroundImage: NetworkImage(
-                                  "${glb.doctor.img}?cache_bust=${Random().nextInt(10000)}",
+                                  glb.clinicRole == '0'
+                                      ? "${glb.clinic.img1}?cache_bust=${Random().nextInt(10000)}"
+                                      : glb.clinicRole == '1'
+                                          ? "${glb.clinicBranch.img1}?cache_bust=${Random().nextInt(10000)}"
+                                          : "${glb.clinicBranchDoc.img1}?cache_bust=${Random().nextInt(10000)}",
                                 ),
                               ),
                               InkWell(
                                 onTap: () {
-                                  _pickImage(glb.usrTyp == '1'
-                                      ? 'doctor_img'
-                                      : 'img1');
+                                  _pickImage(
+                                      glb.usrTyp == '1' ? 'doctor_img' : '1');
                                 },
                                 child: CircleAvatar(
                                   // radius: 0.55.w,
@@ -217,17 +220,20 @@ class _profile_settingsState extends State<profile_settings> {
                             ),
 
                             //  todo: address tf
-                            w200SizedBox(
-                              wd: (3.255 * 6).w,
-                              child: TextFormField(
-                                controller: address_cont,
-                                maxLines: 5,
-                                decoration: InputDecoration(
-                                  hintText: "Address",
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
+                            // Txt(text: glb.clinicRole),
+                            glb.clinicRole == '2'
+                                ? SizedBox.shrink()
+                                : w200SizedBox(
+                                    wd: (3.255 * 6).w,
+                                    child: TextFormField(
+                                      controller: address_cont,
+                                      maxLines: 5,
+                                      decoration: InputDecoration(
+                                        hintText: "Address",
+                                        border: OutlineInputBorder(),
+                                      ),
+                                    ),
+                                  ),
                           ],
                         ))
                       ],
@@ -277,91 +283,6 @@ class _profile_settingsState extends State<profile_settings> {
                         spacing: Sizer.w_10,
                         runSpacing: Sizer.h_10,
                         children: [
-                          // ? Image 1
-                          Container(
-                            height: 200,
-                            width: 200,
-                            decoration: BoxDecoration(
-                              color: Colours.HunyadiYellow.withOpacity(0.3),
-                              border: Border.all(),
-                            ),
-                            child: Column(
-                              children: [
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: InkWell(
-                                    onTap: () {
-                                      glb.ConfirmationBox(context,
-                                          "You want to delete this image?", () {
-                                        Remove_single_img("img1");
-                                      });
-                                    },
-                                    child: Icon(
-                                      Icons.close,
-                                      color: Colours.Red,
-                                    ),
-                                  ),
-                                ),
-
-                                Expanded(
-                                  child:
-                                      // Center(
-                                      // child: _imageFile == null
-                                      //     ? Text('No image selected')
-                                      //     : Image.file(io.File(_imageFile!.path)),
-                                      Image.network(
-                                    glb.doctor.img1,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Iconsax.image);
-                                    },
-                                  ),
-                                ),
-                                // ),
-                                Container(
-                                  color: Colours.HunyadiYellow.withOpacity(0.6),
-                                  height: 50,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      InkWell(
-                                        onTap: () {
-                                          showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return Container(
-                                                    child: PhotoView(
-                                                        imageProvider:
-                                                            NetworkImage(
-                                                  glb.doctor.img1,
-                                                )));
-                                              });
-                                        },
-                                        child: Container(
-                                          width: 100,
-                                          height: 50,
-                                          color: Colours.nonPhoto_blue,
-                                          child: Icon(
-                                              Icons.remove_red_eye_outlined),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            _pickImage('img1');
-                                          },
-                                          child: Container(
-                                            height: 50,
-                                            color: Colours.green,
-                                            child: Icon(Icons.upload),
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           // ? Image 2
                           Container(
                             height: 200,
@@ -395,8 +316,11 @@ class _profile_settingsState extends State<profile_settings> {
                                       //     ? Text('No image selected')
                                       //     : Image.file(io.File(_imageFile!.path)),
                                       Image.network(
-                                    // "${glb.clinic.img2}",
-                                    glb.doctor.img2,
+                                    glb.clinicRole == '0'
+                                        ? "${glb.clinic.img2}?cache_bust=${Random().nextInt(10000)}"
+                                        : glb.clinicRole == '1'
+                                            ? "${glb.clinicBranch.img2}?cache_bust=${Random().nextInt(10000)}"
+                                            : "${glb.clinicBranchDoc.img2}?cache_bust=${Random().nextInt(10000)}",
                                     errorBuilder: (context, error, stackTrace) {
                                       return Icon(Iconsax.image);
                                     },
@@ -418,7 +342,11 @@ class _profile_settingsState extends State<profile_settings> {
                                                     child: PhotoView(
                                                         imageProvider:
                                                             NetworkImage(
-                                                  glb.doctor.img2,
+                                                  glb.clinicRole == '0'
+                                                      ? "${glb.clinic.img2}?cache_bust=${Random().nextInt(10000)}"
+                                                      : glb.clinicRole == '1'
+                                                          ? "${glb.clinicBranch.img2}?cache_bust=${Random().nextInt(10000)}"
+                                                          : "${glb.clinicBranchDoc.img2}?cache_bust=${Random().nextInt(10000)}",
                                                 )));
                                               });
                                         },
@@ -482,7 +410,12 @@ class _profile_settingsState extends State<profile_settings> {
                                       //     : Image.file(io.File(_imageFile!.path)),
                                       Image.network(
                                     // "${glb.clinic.img2}",
-                                    glb.doctor.img3,
+                                    glb.clinicRole == '0'
+                                        ? "${glb.clinic.img3}?cache_bust=${Random().nextInt(10000)}"
+                                        : glb.clinicRole == '1'
+                                            ? "${glb.clinicBranch.img3}?cache_bust=${Random().nextInt(10000)}"
+                                            : "${glb.clinicBranchDoc.img3}?cache_bust=${Random().nextInt(10000)}",
+
                                     errorBuilder: (context, error, stackTrace) {
                                       return Icon(Iconsax.image);
                                     },
@@ -504,7 +437,11 @@ class _profile_settingsState extends State<profile_settings> {
                                                     child: PhotoView(
                                                         imageProvider:
                                                             NetworkImage(
-                                                  glb.doctor.img1,
+                                                  glb.clinicRole == '0'
+                                                      ? "${glb.clinic.img3}?cache_bust=${Random().nextInt(10000)}"
+                                                      : glb.clinicRole == '1'
+                                                          ? "${glb.clinicBranch.img3}?cache_bust=${Random().nextInt(10000)}"
+                                                          : "${glb.clinicBranchDoc.img3}?cache_bust=${Random().nextInt(10000)}",
                                                 )));
                                               });
                                         },
@@ -568,7 +505,12 @@ class _profile_settingsState extends State<profile_settings> {
                                       //     : Image.file(io.File(_imageFile!.path)),
                                       Image.network(
                                     // "${glb.clinic.img2}",
-                                    glb.doctor.img4,
+                                    glb.clinicRole == '0'
+                                        ? "${glb.clinic.img4}?cache_bust=${Random().nextInt(10000)}"
+                                        : glb.clinicRole == '1'
+                                            ? "${glb.clinicBranch.img4}?cache_bust=${Random().nextInt(10000)}"
+                                            : "${glb.clinicBranchDoc.img4}?cache_bust=${Random().nextInt(10000)}",
+
                                     errorBuilder: (context, error, stackTrace) {
                                       return Icon(Iconsax.image);
                                     },
@@ -590,7 +532,11 @@ class _profile_settingsState extends State<profile_settings> {
                                                     child: PhotoView(
                                                         imageProvider:
                                                             NetworkImage(
-                                                  glb.doctor.img1,
+                                                  glb.clinicRole == '0'
+                                                      ? "${glb.clinic.img4}?cache_bust=${Random().nextInt(10000)}"
+                                                      : glb.clinicRole == '1'
+                                                          ? "${glb.clinicBranch.img4}?cache_bust=${Random().nextInt(10000)}"
+                                                          : "${glb.clinicBranchDoc.img4}?cache_bust=${Random().nextInt(10000)}",
                                                 )));
                                               });
                                         },
@@ -620,6 +566,101 @@ class _profile_settingsState extends State<profile_settings> {
                               ],
                             ),
                           ),
+                          // ? Image 5
+                          Container(
+                            height: 200,
+                            width: 200,
+                            decoration: BoxDecoration(
+                              color: Colours.HunyadiYellow.withOpacity(0.3),
+                              border: Border.all(),
+                            ),
+                            child: Column(
+                              children: [
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: InkWell(
+                                    onTap: () {
+                                      glb.ConfirmationBox(context,
+                                          "You want to delete this image?", () {
+                                        Remove_single_img("img5");
+                                      });
+                                    },
+                                    child: Icon(
+                                      Icons.close,
+                                      color: Colours.Red,
+                                    ),
+                                  ),
+                                ),
+
+                                Expanded(
+                                  child:
+                                      // Center(
+                                      // child: _imageFile == null
+                                      //     ? Text('No image selected')
+                                      //     : Image.file(io.File(_imageFile!.path)),
+                                      Image.network(
+                                    // "${glb.clinic.img2}",
+                                    glb.clinicRole == '0'
+                                        ? "${glb.clinic.img5}?cache_bust=${Random().nextInt(10000)}"
+                                        : glb.clinicRole == '1'
+                                            ? "${glb.clinicBranch.img5}?cache_bust=${Random().nextInt(10000)}"
+                                            : "${glb.clinicBranchDoc.img5}?cache_bust=${Random().nextInt(10000)}",
+
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(Iconsax.image);
+                                    },
+                                  ),
+                                ),
+                                // ),
+                                Container(
+                                  color: Colours.HunyadiYellow.withOpacity(0.6),
+                                  height: 50,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      InkWell(
+                                        onTap: () {
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return Container(
+                                                    child: PhotoView(
+                                                        imageProvider:
+                                                            NetworkImage(
+                                                  glb.clinicRole == '0'
+                                                      ? "${glb.clinic.img5}?cache_bust=${Random().nextInt(10000)}"
+                                                      : glb.clinicRole == '1'
+                                                          ? "${glb.clinicBranch.img5}?cache_bust=${Random().nextInt(10000)}"
+                                                          : "${glb.clinicBranchDoc.img5}?cache_bust=${Random().nextInt(10000)}",
+                                                )));
+                                              });
+                                        },
+                                        child: Container(
+                                          width: 100,
+                                          height: 50,
+                                          color: Colours.nonPhoto_blue,
+                                          child: Icon(
+                                              Icons.remove_red_eye_outlined),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: InkWell(
+                                          onTap: () {
+                                            _pickImage('img5');
+                                          },
+                                          child: Container(
+                                            height: 50,
+                                            color: Colours.green,
+                                            child: Icon(Icons.upload),
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -635,7 +676,7 @@ class _profile_settingsState extends State<profile_settings> {
                 children: [
                   Center(
                     child: Txt(
-                      text: "Doctor profile settings",
+                      text: "Clinic profile settings",
                       fntWt: FontWeight.bold,
                       size: 18,
                       fontColour: Colours.RussianViolet,
@@ -660,9 +701,11 @@ class _profile_settingsState extends State<profile_settings> {
                                 backgroundColor: Colours.HunyadiYellow,
 
                                 backgroundImage: NetworkImage(
-                                  glb.usrTyp == '1'
-                                      ? "${glb.doctor.img}?cache_bust=${Random().nextInt(10000)}"
-                                      : "${glb.clinicBranchDoc.img1}?cache_bust=${Random().nextInt(10000)}",
+                                  glb.clinicRole == '0'
+                                      ? "${glb.clinic.img1}?cache_bust=${Random().nextInt(10000)}"
+                                      : glb.clinicRole == '1'
+                                          ? "${glb.clinicBranch.img1}?cache_bust=${Random().nextInt(10000)}"
+                                          : "${glb.clinicBranchDoc.img1}?cache_bust=${Random().nextInt(10000)}",
                                 ),
                                 // child: Image.network(
                                 //   "${glb.doctor.img}?cache_bust=${Random().nextInt(10000)}",
@@ -673,9 +716,8 @@ class _profile_settingsState extends State<profile_settings> {
                               ),
                               InkWell(
                                 onTap: () {
-                                  _pickImage(glb.usrTyp == '1'
-                                      ? 'doctor_img'
-                                      : 'img1');
+                                  _pickImage(
+                                      glb.usrTyp == '1' ? 'doctor_img' : '1');
                                 },
                                 child: CircleAvatar(
                                   // radius: 0.55.w,
@@ -783,17 +825,19 @@ class _profile_settingsState extends State<profile_settings> {
                               ),
 
                               //  todo: address tf
-                              SizedBox(
-                                width: Sizer.w_50 * 6,
-                                child: TextFormField(
-                                  controller: address_cont,
-                                  maxLines: 5,
-                                  decoration: InputDecoration(
-                                    hintText: "Address",
-                                    border: OutlineInputBorder(),
-                                  ),
-                                ),
-                              ),
+                              glb.clinicRole == '2'
+                                  ? SizedBox.shrink()
+                                  : SizedBox(
+                                      width: Sizer.w_50 * 6,
+                                      child: TextFormField(
+                                        controller: address_cont,
+                                        maxLines: 5,
+                                        decoration: InputDecoration(
+                                          hintText: "Address",
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: ElevatedButton(
@@ -857,31 +901,35 @@ class _profile_settingsState extends State<profile_settings> {
                       runSpacing: Sizer.h_10,
                       children: [
                         ImageContainer(
-                          glb.usrTyp == '1'
-                              ? glb.doctor.img1
-                              : glb.clinicBranchDoc.img2 +
-                                  "?cache_bust=${Random().nextInt(10000)}",
+                          glb.clinicRole == '0'
+                              ? "${glb.clinic.img2}?cache_bust=${Random().nextInt(10000)}"
+                              : glb.clinicRole == '1'
+                                  ? "${glb.clinicBranch.img2}?cache_bust=${Random().nextInt(10000)}"
+                                  : "${glb.clinicBranchDoc.img2}?cache_bust=${Random().nextInt(10000)}",
                           glb.usrTyp == '1' ? "img1" : '2',
                         ),
                         ImageContainer(
-                          glb.usrTyp == '1'
-                              ? glb.doctor.img2
-                              : glb.clinicBranchDoc.img3 +
-                                  "?cache_bust=${Random().nextInt(10000)}",
+                          glb.clinicRole == '0'
+                              ? "${glb.clinic.img3}?cache_bust=${Random().nextInt(10000)}"
+                              : glb.clinicRole == '1'
+                                  ? "${glb.clinicBranch.img3}?cache_bust=${Random().nextInt(10000)}"
+                                  : "${glb.clinicBranchDoc.img3}?cache_bust=${Random().nextInt(10000)}",
                           glb.usrTyp == '1' ? "img2" : '3',
                         ),
                         ImageContainer(
-                          glb.usrTyp == '1'
-                              ? glb.doctor.img3
-                              : glb.clinicBranchDoc.img4 +
-                                  "?cache_bust=${Random().nextInt(10000)}",
+                          glb.clinicRole == '0'
+                              ? "${glb.clinic.img4}?cache_bust=${Random().nextInt(10000)}"
+                              : glb.clinicRole == '1'
+                                  ? "${glb.clinicBranch.img4}?cache_bust=${Random().nextInt(10000)}"
+                                  : "${glb.clinicBranchDoc.img4}?cache_bust=${Random().nextInt(10000)}",
                           glb.usrTyp == '1' ? "img3" : '4',
                         ),
                         ImageContainer(
-                          glb.usrTyp == '1'
-                              ? glb.doctor.img4
-                              : glb.clinicBranchDoc.img5 +
-                                  "?cache_bust=${Random().nextInt(10000)}",
+                          glb.clinicRole == '0'
+                              ? "${glb.clinic.img5}?cache_bust=${Random().nextInt(10000)}"
+                              : glb.clinicRole == '1'
+                                  ? "${glb.clinicBranch.img5}?cache_bust=${Random().nextInt(10000)}"
+                                  : "${glb.clinicBranchDoc.img5}?cache_bust=${Random().nextInt(10000)}",
                           glb.usrTyp == '1' ? "img4" : '5',
                         ),
                       ],
@@ -1164,7 +1212,8 @@ class _profile_settingsState extends State<profile_settings> {
               onTap: () {
                 glb.ConfirmationBox(context, "You want to delete this image?",
                     () {
-                  Remove_single_img(img_no);
+                  Remove_single_img(
+                      glb.usrTyp == '1' ? img_no : "img${img_no}");
                 });
               },
               child: Icon(
@@ -1557,7 +1606,7 @@ class _profile_settingsState extends State<profile_settings> {
       print("try");
       final response = await request.send();
       var jawab = await http.Response.fromStream(response);
-      // print("Jawab = ${jawab.body}");
+      print("Jawab = ${jawab.body}");
       print(jawab.statusCode);
       // print(jawab);
       print("res = ${response.statusCode}");
@@ -1579,9 +1628,6 @@ class _profile_settingsState extends State<profile_settings> {
 
   Future<void> _sendImage1(String imgNO, String clinic_id) async {
     print("sending img");
-    print(">>>> $clinic_id");
-    print("image number = $imgNO");
-    print("clinic role = ${glb.clinicRole}");
     String url = glb.API.baseURL + glb.API.upload_clinic_img;
     final file = _imageFile!.path;
     String imgNM = "_Cimg_${imgNO}.jpg";
@@ -1720,28 +1766,33 @@ class _profile_settingsState extends State<profile_settings> {
   }
 
   Remove_single_img(String img_no) async {
-    // String url = glb.API.baseURL+ "DelAdminProd";
+    print("removing image");
     Uri url = Uri.parse("");
     url = Uri.parse(glb.API.baseURL + "Del_Doctors_Img");
-
+    print(img_no);
+    // exit(1);
     try {
       var res = await http.post(
         url,
         body: {
-          'branch_doc': '0',
-          'clinic_role': '0',
-          'doc_id': "${glb.doctor.doc_id}",
+          'branch_doc': '1',
+          'clinic_role': glb.clinicRole,
+          'doc_id': glb.clinicRole == '1'
+              ? "${glb.clinicBranch.branch_id}"
+              : glb.clinicBranchDoc.doc_id,
           'img_no': img_no,
         },
       );
-
+// print(body)
       print("Del response == " + res.statusCode.toString());
-      print(res.body);
+      // print(res.body);
       if (res.statusCode == 200) {
         glb.SuccessToast(context, "Done");
         Navigator.pop(context);
         login_async(glb.doctor.mobile_no, glb.doctor.pswd, "img");
       }
-    } catch (e) {}
+    } catch (e) {
+      print("Exception $e");
+    }
   }
 }

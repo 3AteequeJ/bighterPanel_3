@@ -6,9 +6,11 @@ import 'package:bighter_panel/Clinic/clinic_pg.dart';
 import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/sizer.dart';
 import 'package:bighter_panel/Utilities/text/txt.dart';
+import 'package:bighter_panel/doctor/SideMenuScreens/Shopping/Cart_pg.dart';
 import 'package:bighter_panel/doctor/docHome_pg.dart';
 import 'package:bighter_panel/models/CartProducts_model.dart';
 import 'package:bighter_panel/models/DoctorShopping_model.dart';
+import 'package:bighter_panel/routing/router.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:bighter_panel/doctor/SideMenuScreens/Shopping/DocShopProd.dart'
@@ -90,7 +92,12 @@ class DoctorShop_card extends StatelessWidget {
                   width: double.infinity,
                   child: isInCart
                       ? OutlinedButton.icon(
-                          onPressed: null,
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Cart_scrn()));
+                          },
                           icon: const Icon(Icons.check, size: 18),
                           label: const Text("In Cart"),
                         )

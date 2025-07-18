@@ -350,7 +350,8 @@ class _Login_pgState extends State<Login_pg> {
           glb.clinic.contact_no = bdy[0]['mobile_no'].toString();
           glb.clinic.pswd = bdy[0]['pswd'].toString();
           glb.clinic.email_id = bdy[0]['email_id'].toString();
-          glb.clinic.address = bdy[0]['address'].toString();
+          glb.clinic.address =
+              bdy[0]['address'].toString().replaceAll('///', ', ');
           glb.clinic.img1 = "${glb.API.baseURL}images/clinic_images/" +
               bdy[0]['img1'].toString();
           glb.clinic.img2 = "${glb.API.baseURL}images/clinic_images/" +
@@ -408,7 +409,8 @@ class _Login_pgState extends State<Login_pg> {
                       bdy[0]['medical_council_certificate'].toString();
               glb.doctor.available_from = bdy[0]['available_from'].toString();
               glb.doctor.available_to = bdy[0]['available_to'].toString();
-              glb.doctor.address = bdy[0]['address'].toString();
+              glb.doctor.address =
+                  bdy[0]['address'].toString().replaceAll('///', ', ');
               glb.doctor.city_id = bdy[0]['city_id'].toString();
               glb.doctor.pharmacy_user = bdy[0]['pharmacy_user'].toString();
               glb.doctor.experience = bdy[0]['experience'].toString();
@@ -466,7 +468,8 @@ class _Login_pgState extends State<Login_pg> {
             glb.clinic.contact_no = body['mobile_no'].toString();
             glb.clinic.pswd = body['password'].toString();
             glb.clinic.email_id = body['email_id'].toString();
-            glb.clinic.address = body['address'].toString();
+            glb.clinic.address =
+                body['address'].toString().replaceAll('///', ', ');
             glb.clinic.img1 = "${glb.API.baseURL}images/clinic_images/" +
                 body['img1'].toString();
             glb.clinic.img2 = "${glb.API.baseURL}images/clinic_images/" +
@@ -487,7 +490,8 @@ class _Login_pgState extends State<Login_pg> {
             glb.clinicBranch.clinic_name = body['name'].toString();
             glb.clinicBranch.contact_no = body['mob_no'].toString();
             glb.clinicBranch.email_id = body['email_id'].toString();
-            glb.clinicBranch.clinicAddress = body['address'].toString();
+            glb.clinicBranch.clinicAddress =
+                body['address'].toString().replaceAll('///', ', ');
 
             glb.clinicBranch.img1 = "${glb.API.baseURL}images/branch_images/" +
                 bdy[0]['img1'].toString();
@@ -529,7 +533,8 @@ class _Login_pgState extends State<Login_pg> {
             glb.clinicBranchDoc.img5 =
                 "${glb.API.baseURL}images/branchDoc_images/" +
                     bdy[0]['img5'].toString();
-            glb.clinicBranchDoc.address = bdy[0]['branch_address'].toString();
+            glb.clinicBranchDoc.address =
+                bdy[0]['branch_address'].toString().replaceAll('///', ', ');
             glb.clinicBranchDoc.available_from =
                 bdy[0]['available_from'].toString();
             glb.clinicBranchDoc.available_to =

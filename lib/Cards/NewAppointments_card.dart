@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:bighter_panel/Clinic/clinic_pg.dart';
+import 'package:bighter_panel/doctor/docHome_pg.dart';
+import 'package:bighter_panel/routing/router.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -247,12 +250,24 @@ class _NewAppointments_cardState extends State<NewAppointments_card> {
 
       if (res.statusCode == 200) {
         glb.SuccessToast(context, "Done");
-        Navigator.pop(context);
+        // Navigator.pop(context);
 
         if (glb.usrTyp == '1') {
           await getDocAppointmentsAsync();
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => DocHome_pg(
+                        pgNO: 1,
+                      )));
         } else if (glb.usrTyp == '2') {
           await getDocAppointments1Async();
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => clinicHome_pg(
+                        pgNO: 1,
+                      )));
         }
       }
     } catch (e) {
@@ -287,7 +302,8 @@ class _NewAppointments_cardState extends State<NewAppointments_card> {
               userID: bdy[i]['user_id'].toString(),
               userNM: bdy[i]['name'].toString(),
               clinicID: bdy[i]['clinic_id'].toString(),
-              dt_time: bdy[i]['timing'].toString(),
+              dt_time:
+                  bdy[i]['date'].toString() + ' ' + bdy[i]['timing'].toString(),
               usr_img: "${glb.API.baseURL}images/user_images/" +
                   bdy[i]['user_img'].toString(),
               type: bdy[i]['type'].toString(),
@@ -359,7 +375,8 @@ class _NewAppointments_cardState extends State<NewAppointments_card> {
             userID: bdy[i]['user_id'].toString(),
             userNM: bdy[i]['name'].toString(),
             clinicID: bdy[i]['clinic_id'].toString(),
-            dt_time: bdy[i]['timing'].toString(),
+            dt_time:
+                bdy[i]['date'].toString() + ' ' + bdy[i]['timing'].toString(),
             usr_img: "${glb.API.baseURL}images/user_images/" +
                 bdy[i]['user_img'].toString(),
             type: bdy[i]['type'].toString(),

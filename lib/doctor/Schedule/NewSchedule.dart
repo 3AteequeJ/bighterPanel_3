@@ -19,9 +19,9 @@ class NewSchedule extends StatefulWidget {
 }
 
 // Global time maps
-Map<String, DateTime> timeMap = generateTimeMap(8, 12);
-Map<String, DateTime> afternoonTimeMap = generateTimeMap(12, 17);
-Map<String, DateTime> eveningTimeMap = generateTimeMap(12, 23);
+Map<String, DateTime> timeMap = generateTimeMap(00, 24);
+Map<String, DateTime> afternoonTimeMap = generateTimeMap(00, 24);
+Map<String, DateTime> eveningTimeMap = generateTimeMap(00, 24);
 
 Map<String, DateTime> myMorningMap = {};
 Map<String, DateTime> myAfternoonMap = {};
@@ -383,13 +383,28 @@ class _NewScheduleState extends State<NewSchedule> {
         children: [
           Icon(Icons.calendar_today, color: Colours.HunyadiYellow, size: 20),
           SizedBox(width: 2.w),
-          Text(
-            "My Schedule",
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "My Schedule",
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              SizedBox(
+                width: 50.w,
+                child: Text(
+                  "Note: The below slots will be visible to the users and the slots will be blocked to the users as well",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
           ),
           const Spacer(),
           Flexible(
@@ -667,7 +682,7 @@ class _NewScheduleState extends State<NewSchedule> {
         } else {
           await _clinicLoginAsync();
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => clinicHome_pg(pgNO: 5)));
+              MaterialPageRoute(builder: (context) => clinicHome_pg(pgNO: 2)));
         }
       }
     } catch (e) {

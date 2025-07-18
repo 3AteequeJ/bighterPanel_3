@@ -34,58 +34,64 @@ class OrdersCard extends StatelessWidget {
                 ),
               );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10.sp),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(2, 2),
-            )
-          ],
-        ),
-        padding: EdgeInsets.all(12.sp),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// Top Row: Date & Time
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Txt(text: glb.getDate(order.order_date)),
-                Txt(text: glb.getDateTIme(order.order_date)),
-              ],
-            ),
-            SizedBox(height: 1.h),
-
-            /// User Info
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: currentWidth <= 600 ? 10.w : 2.5.w,
-                  backgroundImage: NetworkImage(order.user_image),
-                ),
-                SizedBox(width: 2.w),
-                Expanded(
-                  child: Txt(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 4.h),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10.sp),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: Offset(2, 2),
+              )
+            ],
+          ),
+          padding: EdgeInsets.all(12.sp),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              /// User Info
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: currentWidth <= 600 ? 10.w : 2.5.w,
+                    backgroundImage: NetworkImage(order.user_image),
+                  ),
+                  SizedBox(width: 2.w),
+                  Txt(
                     text: order.user_name,
                     maxLn: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
 
-            SizedBox(height: 1.h),
-            Txt(
-              text: "Total: ₹ ${order.total}",
-              textAlignment: TextAlign.left,
-            ),
-            Divider(thickness: 1, color: Colors.grey[300]),
-            Txt(text: "Payment ID: ${order.payment_id}"),
-          ],
+              SizedBox(height: 1.h),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Txt(
+                    text: "Total: ₹ ${order.total}",
+                    textAlignment: TextAlign.left,
+                  ),
+                  Txt(text: "Payment ID: ${order.payment_id}"),
+                ],
+              ),
+
+              /// Top Row: Date & Time
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Txt(text: glb.getDate(order.order_date)),
+                  Txt(text: glb.getDateTIme(order.order_date)),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

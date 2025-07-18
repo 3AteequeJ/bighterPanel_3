@@ -298,6 +298,7 @@ class _usersPharmState extends State<usersPharm> {
             img4: '',
             img5: '',
             desc: '',
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
           ),
         );
       }

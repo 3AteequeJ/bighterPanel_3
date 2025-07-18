@@ -177,7 +177,8 @@ class _invoice_scrnState extends State<invoice_scrn> {
           "quantity": "${glb.Models.CartProd_lst[i].quant}",
           "price": "${glb.Models.CartProd_lst[i].price}",
           "payment_id": "${Payment_ID}",
-          "branch_doc": "0"
+          "branch_doc": "0",
+          "shipping_price": "${glb.shippingCharge.price}",
         });
       }
     } else if (glb.usrTyp == '2') {
@@ -195,7 +196,7 @@ class _invoice_scrnState extends State<invoice_scrn> {
     }
 
     print("Invoice>> " + jsonEncode(invoice));
-    // placeOrder_async(invoice);
+    placeOrder_async(invoice);
   }
 
   void handleExternalWalletSelected(ExternalWalletResponse response) {

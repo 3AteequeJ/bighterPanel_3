@@ -502,17 +502,8 @@ class _addDocState extends State<addDoc> {
                                     context, "Enter all the details");
                               } else {
                                 glb.loading(context);
-                                Register_for_request(
-                                    profileP,
-                                    IDp,
-                                    certificateP,
-                                    councilCertificate,
-                                    n,
-                                    m,
-                                    ml,
-                                    p,
-                                    s,
-                                    d);
+                                registerForRequest(profileP, IDp, certificateP,
+                                    councilCertificate, n, m, ml, p, s, d);
                               }
                             },
                             child: Txt(
@@ -591,112 +582,86 @@ class _addDocState extends State<addDoc> {
     });
   }
 
-  Future<void> Register_for_request(
-    String path_profilep,
-    String path_idp,
-    String path_degCertp,
-    String path_MedConCertp,
+  Future<void> registerForRequest(
+    String pathProfile,
+    String pathId,
+    String pathDegreeCert,
+    String pathCouncilCert,
     String name,
     String mobile,
-    String mail,
-    String pswd,
+    String email,
+    String password,
     String speciality,
     String degree,
   ) async {
-    print("sending doc img");
+    final url = Uri.parse(glb.API.baseURL + glb.API.new_reg_doc);
+    print("Registering doctor with documents...");
 
-    print(path_profilep);
-    print(path_idp);
-    print(path_degCertp);
-    print(path_MedConCertp);
-
-    final url = glb.API.baseURL + glb.API.new_reg_doc;
-
-    final file = path_profilep;
-    final response = await http.get(Uri.parse(file));
-    final Uint8List imageData = response.bodyBytes;
-
-    final file2 = path_idp;
-    final response2 = await http.get(Uri.parse(file2));
-    final Uint8List imageData2 = response2.bodyBytes;
-
-    final file3 = path_idp;
-    final response3 = await http.get(Uri.parse(file3));
-    final Uint8List imageData3 = response3.bodyBytes;
-
-    final file4 = path_degCertp;
-    final response4 = await http.get(Uri.parse(file4));
-    final Uint8List imageData4 = response4.bodyBytes;
-
-    var a = int.parse(glb.Tdocs);
-    var b = a + 1;
-    var request = http.MultipartRequest('POST', Uri.parse(url));
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'doctor_img',
-        imageData,
-        filename: '${mobile}_profile_img.jpg',
-        // filename: 'kittens.png',
-      ),
-    );
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'id_img',
-        imageData2,
-        filename: '${mobile}_id_img.jpg',
-        // filename: 'dogs.png',
-      ),
-    );
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'degC_img',
-        imageData3,
-        filename: '${mobile}_degC_img.jpg',
-        // filename: 'cniLogo.png',
-      ),
-    );
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'CouncilC_img',
-        imageData4,
-        filename: '${mobile}_CouncilC_img.jpg',
-        // filename: 'ev_motors.png',
-      ),
-    );
-
-    request.fields['name'] = name;
-    request.fields['mobile'] = mobile;
-    request.fields['password'] = pswd;
-    request.fields['email'] = mail;
-    request.fields['speciality'] = speciality;
-    request.fields['degree'] = degree;
-    request.fields['verified'] = '1';
-
-    // request.fields['name'] = "req";
-    // request.fields['mobile'] = "1234444";
-    // request.fields['password'] = "pswd";
-    // request.fields['email'] = "mail";
-    // request.fields['speciality'] = "speciality";
-    // request.fields['degree'] = "degree";
-    print("sending img 2");
     try {
-      print("try");
-      final res = await request.send();
-      print("res = ${res.statusCode}");
-      print("res = ${res}");
-      // print(res.request.)
+      // Load image files
+      final imageDataProfile =
+          (await http.get(Uri.parse(pathProfile))).bodyBytes;
+      final imageDataId = (await http.get(Uri.parse(pathId))).bodyBytes;
+      final imageDataDegCert =
+          (await http.get(Uri.parse(pathDegreeCert))).bodyBytes;
+      final imageDataCouncilCert =
+          (await http.get(Uri.parse(pathCouncilCert))).bodyBytes;
 
-      print(res.stream.first);
-      print(res.contentLength);
-      print(res.headersSplitValues);
+      final request = http.MultipartRequest('POST', url)
+        ..files.add(http.MultipartFile.fromBytes(
+          'doctor_img',
+          imageDataProfile,
+          filename: '${mobile}_profile.jpg',
+        ))
+        ..files.add(http.MultipartFile.fromBytes(
+          'id_img',
+          imageDataId,
+          filename: '${mobile}_id.jpg',
+        ))
+        ..files.add(http.MultipartFile.fromBytes(
+          'degC_img',
+          imageDataDegCert,
+          filename: '${mobile}_degree.jpg',
+        ))
+        ..files.add(http.MultipartFile.fromBytes(
+          'CouncilC_img',
+          imageDataCouncilCert,
+          filename: '${mobile}_council.jpg',
+        ))
+        ..fields.addAll({
+          'name': name,
+          'mobile': mobile,
+          'password': password,
+          'email': email,
+          'speciality': speciality,
+          'degree': degree,
+          'verified': '1',
+        });
 
-      if (res.statusCode == 200) {
-        setState(() {
-          if (res.contentLength == 1) {
-            glb.SuccessToast(context, "Request sent");
+      final response = await request.send();
+
+      // Read the response body
+      final responseBody = await response.stream.bytesToString();
+      print("Status code: ${response.statusCode}");
+      print("vvvvvvvvvvvvvv");
+
+      print("Response body: ${responseBody}");
+      print("^^^^^^^^^^^^");
+      if (response.statusCode == 200) {
+        // You should parse actual server response to determine outcome
+        if (responseBody == 'User Already Exists') {
+          Navigator.pop(context);
+          glb.ConfirmationBox(
+            context,
+            "You have already registered,\nplease wait for our team to verify your details",
+            () => Navigator.pop(context),
+          );
+        } else if (responseBody == '1' || responseBody.contains('inserted')) {
+          print("request sent");
+          glb.SuccessToast(context, "Request sent successfully");
+
+          // Clear all fields
+          setState(() {
             nm_cont.clear();
             mobno_cont.clear();
             mail_cont.clear();
@@ -706,25 +671,24 @@ class _addDocState extends State<addDoc> {
             IDp = "";
             certificateP = '';
             councilCertificate = '';
-            getAllDocs_async();
-          } else if (res.contentLength == 19) {
-            glb.ConfirmationBox(context,
-                "You have already registered,\nplease wait for our team to verify your details",
-                () {
-              Navigator.pop(context);
-            });
-          }
-        });
+          });
+
+          getAllDocs_async();
+        } else {
+          glb.errorToast(context, "Unknown response from server");
+        }
       } else {
-        setState(() {});
+        glb.errorToast(context, "Failed with status: ${response.statusCode}");
       }
     } catch (e) {
-      print("catch");
-      print(e);
-      setState(() {});
+      print("Exception: $e");
+      glb.errorToast(
+          context, "An error occurred while submitting. Please try again.");
+    } finally {
+      Navigator.pop(context); // Close any loading/dialog
     }
-    Navigator.pop(context);
-    print("sending img exit");
+
+    print("Register doctor process completed.");
   }
 
   List<AllDoc_model> ad = [];

@@ -70,7 +70,8 @@ class _OrdersScrnState extends State<OrdersScrn> {
         );
         orders.add(order);
       }
-      filteredOrders = List.from(orders);
+      filteredOrders =
+          List.from(orders).reversed.toList().cast<AllordersModel>();
       setState(() {});
     }
   }
@@ -146,14 +147,14 @@ class _OrdersScrnState extends State<OrdersScrn> {
           Expanded(
             child: filteredOrders.isEmpty
                 ? Center(child: Txt(text: "No orders found"))
-                : GridView.builder(
+                : ListView.builder(
                     itemCount: filteredOrders.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      childAspectRatio: 1.5,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                    ),
+                    // gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    //   crossAxisCount: 4,
+                    //   childAspectRatio: 1.5,
+                    //   mainAxisSpacing: 10,
+                    //   crossAxisSpacing: 10,
+                    // ),
                     itemBuilder: (context, index) {
                       return OrdersCard(order: filteredOrders[index]);
                     },

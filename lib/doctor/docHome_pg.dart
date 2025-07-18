@@ -609,17 +609,19 @@ class _DocHome_pgState extends State<DocHome_pg> {
       for (int i = 0; i < b.length; i++) {
         pm.add(
           myProducts_model(
-              ID: bdy[i]['id'].toString(),
-              name: bdy[i]['product_name'].toString(),
-              price: bdy[i]['price'].toString(),
-              img: "${glb.API.baseURL}images/doctor_pharmacy/" +
-                  bdy[i]['image'].toString(),
-              img2: '',
-              img3: '',
-              img4: '',
-              img5: '',
-              desc: '',
-              typ: bdy[i]['type'].toString()),
+            ID: bdy[i]['id'].toString(),
+            name: bdy[i]['product_name'].toString(),
+            price: bdy[i]['price'].toString(),
+            img: "${glb.API.baseURL}images/doctor_pharmacy/" +
+                bdy[i]['image'].toString(),
+            img2: '',
+            img3: '',
+            img4: '',
+            img5: '',
+            desc: '',
+            typ: bdy[i]['type'].toString(),
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
+          ),
         );
       }
       setState(() {

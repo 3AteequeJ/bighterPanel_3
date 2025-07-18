@@ -173,6 +173,7 @@ class _Products_cardState extends State<Products_card> {
             img5: "${glb.API.baseURL}images/admin_pharmacy/" +
                 bdy[i]['img5'].toString(),
             desc: bdy[i]['Description'].toString(),
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
           ),
         );
       }
@@ -220,6 +221,7 @@ class _Products_cardState extends State<Products_card> {
             img4: '',
             img5: '',
             desc: '',
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
           ),
         );
       }

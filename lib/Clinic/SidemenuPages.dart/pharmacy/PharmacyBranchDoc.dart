@@ -1019,16 +1019,18 @@ class _PharmacyBranchDocState extends State<PharmacyBranchDoc> {
         );
         pm.add(
           myProducts_model(
-              ID: bdy[i]['id'].toString(),
-              name: bdy[i]['product_name'].toString(),
-              price: bdy[i]['price'].toString(),
-              img: a + bdy[i][rcvImg].toString(),
-              img2: a + bdy[i]['img2'].toString(),
-              img3: a + bdy[i]['img3'].toString(),
-              img4: a + bdy[i]['img4'].toString(),
-              img5: a + bdy[i]['img5'].toString(),
-              desc: bdy[i][desc].toString(),
-              typ: bdy[i]['type'].toString()),
+            ID: bdy[i]['id'].toString(),
+            name: bdy[i]['product_name'].toString(),
+            price: bdy[i]['price'].toString(),
+            img: a + bdy[i][rcvImg].toString(),
+            img2: a + bdy[i]['img2'].toString(),
+            img3: a + bdy[i]['img3'].toString(),
+            img4: a + bdy[i]['img4'].toString(),
+            img5: a + bdy[i]['img5'].toString(),
+            desc: bdy[i][desc].toString(),
+            typ: bdy[i]['type'].toString(),
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
+          ),
         );
       }
       setState(() {

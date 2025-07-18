@@ -5,6 +5,7 @@ import 'package:bighter_panel/Admin/Models/myProducts.dart';
 import 'package:bighter_panel/Clinic/SidemenuPages.dart/Branches.dart/allBranches.dart';
 import 'package:bighter_panel/Clinic/appointments_pg.dart';
 import 'package:bighter_panel/Clinic/SidemenuPages.dart/Doctors/doctors_pg.dart';
+import 'package:bighter_panel/Clinic/clinicProfile.dart';
 import 'package:bighter_panel/Clinic/settings/settings_scrn.dart';
 import 'package:bighter_panel/Utilities/colours.dart';
 import 'package:bighter_panel/Utilities/sizer.dart';
@@ -835,7 +836,7 @@ class _clinicHome_pgState extends State<clinicHome_pg> {
                                     // this is for SideMenuItem with builder (divider)
 
                                     // Settings_scrn(),
-                                    profile_settings(),
+                                    Clinicprofile_settings(),
                                   ])),
               ],
             ),
@@ -1103,6 +1104,7 @@ class _clinicHome_pgState extends State<clinicHome_pg> {
             img5: a + bdy[i]['img5'].toString(),
             desc: bdy[i][desc].toString(),
             typ: bdy[i]['type'].toString(),
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
           ),
         );
       }

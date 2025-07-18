@@ -63,6 +63,7 @@ class API {
 
   static const String DelAdminSingleProdImg = "DelAdminSingleProdImg";
   static const String DelDocSingleProdImg = "DelDocSingleProdImg";
+  static const String DelBranchDocSingleProdImg = "DelBranchDocSingleProdImg";
 
   // location
   static const String get_all_states = "get_all_states";
@@ -132,7 +133,7 @@ class Models {
   static List<CartProducts_Model> CartProd_lst = [];
 }
 
-String usrTyp = "0"; //todo: 0- admin, 1- user, 2- clinic
+String usrTyp = "0"; //todo: 0- admin, 1- user(doc), 2- clinic
 String clinicRole =
     ''; //todo: 0 - HQ(Main headquarters), 1 - branch, 2 - Doctor
 

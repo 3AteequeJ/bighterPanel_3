@@ -134,34 +134,39 @@ class _newUserPharmacyState extends State<newUserPharmacy> {
 
     final request = http.MultipartRequest('POST', Uri.parse(url));
 
-    for (int i = 0; i < images.length; i++) {
-      final imageData = await getImageBytes(images[i]);
-      final fieldName = i == 0 ? 'image' : 'img${i + 1}';
-      request.files.add(http.MultipartFile.fromBytes(
-        fieldName,
-        imageData,
-        filename: "${name}_${i + 1}.jpg",
-      ));
-    }
-
-    request.fields['product_name'] = name;
-    request.fields['price'] = price;
-    request.fields['type'] = type;
-    request.fields['description'] = desc;
-
     try {
+      // Attach all image files
+      for (int i = 0; i < images.length; i++) {
+        final imageData = await getImageBytes(images[i]);
+        final fieldName = i == 0 ? 'image' : 'img${i + 1}';
+        request.files.add(http.MultipartFile.fromBytes(
+          fieldName,
+          imageData,
+          filename: "${name}_${i + 1}.jpg",
+        ));
+      }
+
+      // Attach form fields
+      request.fields['product_name'] = name;
+      request.fields['price'] = price;
+      request.fields['type'] = type;
+      request.fields['description'] = desc;
+
       final response = await request.send();
-      if (response.statusCode == 200) {
-        Navigator.pop(context);
+      final respStr = await response.stream.bytesToString();
+      print("response hai: $respStr");
+      Navigator.pop(context);
+
+      if (response.statusCode == 200 && respStr.trim() == '1') {
         glb.SuccessToast(context, "Product added successfully");
         resetForm();
         await fetchAndSetProducts();
       } else {
-        Navigator.pop(context);
         glb.errorToast(context, "Failed to add product");
       }
     } catch (e) {
       Navigator.pop(context);
+      glb.errorToast(context, "Something went wrong");
       print("Upload error: $e");
     }
   }
@@ -185,6 +190,7 @@ class _newUserPharmacyState extends State<newUserPharmacy> {
               img3: "${glb.API.baseURL}images/admin_pharmacy/${item['img3']}",
               img4: "${glb.API.baseURL}images/admin_pharmacy/${item['img4']}",
               img5: "${glb.API.baseURL}images/admin_pharmacy/${item['img5']}",
+              out_of_stock: item['out_of_stock'].toString(),
             ))
         .toList();
   }

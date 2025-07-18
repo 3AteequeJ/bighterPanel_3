@@ -258,7 +258,8 @@ class _AppointmentRequest_cardsState extends State<AppointmentRequest_cards> {
             userID: bdy[i]['user_id'].toString(),
             userNM: bdy[i]['name'].toString(),
             clinicID: bdy[i]['clinic_id'].toString(),
-            dt_time: bdy[i]['timing'].toString(),
+            dt_time:
+                bdy[i]['date'].toString() + ' ' + bdy[i]['timing'].toString(),
             usr_img: "${glb.API.baseURL}images/user_images/" +
                 bdy[i]['user_img'].toString(),
             type: bdy[i]['type'].toString(),

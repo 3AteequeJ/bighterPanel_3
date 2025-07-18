@@ -217,7 +217,10 @@ class _NewAppointmentsState extends State<NewAppointments> {
     int inClinic = 0, video = 0, ongoing = 0, completed = 0, canceled = 0;
 
     for (var appt in glb.Models.appointments_lst) {
+      print("date before parsing = ${appt.dt_time}");
       final dateTime = DateTime.parse(appt.dt_time);
+
+      print("date after parsing = ${dateTime}");
       final isPast = dateTime.isBefore(DateTime.now()) ||
           dateTime.isAtSameMomentAs(DateTime.now());
 

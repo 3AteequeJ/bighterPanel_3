@@ -21,6 +21,8 @@ class EditProduct extends StatefulWidget {
 }
 
 class _EditProductState extends State<EditProduct> {
+  bool isOutOfStock = false;
+
   final prodNM_cont = TextEditingController();
   final price_cont = TextEditingController();
   final desc_cont = TextEditingController();
@@ -30,6 +32,8 @@ class _EditProductState extends State<EditProduct> {
   @override
   void initState() {
     super.initState();
+    isOutOfStock = widget.product.out_of_stock == '1';
+
     final p = widget.product;
     prodNM_cont.text = p.name;
     price_cont.text = p.price;
@@ -78,15 +82,93 @@ class _EditProductState extends State<EditProduct> {
       var res = await http.post(url, body: boody);
       print("body = ${res.body}");
       if (res.body.toString() == '1') {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => DocHome_pg(
+                      pgNO: 5,
+                    )));
         glb.SuccessToast(context, "Done");
         if (glb.usrTyp == '0') {
           GetAdminProducts_async();
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => adminHome_pg(
+                        pgNO: 5,
+                      )));
         } else {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => clinicHome_pg(
+                        pgNO: 5,
+                      )));
           GetDocProducts_async();
         }
       }
     } catch (e) {}
     Navigator.pop(context);
+  }
+
+  Future<void> toggleOutOfStockStatus({
+    required String productId,
+    required bool isOutOfStock,
+  }) async {
+    print("Toggeling");
+    final url = Uri.parse('https://rts.bighter.com/toggle_outOfStock');
+
+    try {
+      final response = await http.post(
+        url,
+        body: {
+          "usr_typ": glb.usrTyp == '0'
+              ? "0"
+              : glb.usrTyp == '1'
+                  ? '1'
+                  : '2',
+          'product_id': productId.toString(),
+          'out_of_stock': isOutOfStock ? '1' : '0',
+        },
+      );
+      print("response = ${response.statusCode}");
+      print("body = ${response.body}");
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isOutOfStock
+                  ? 'Product marked as Out of Stock.'
+                  : 'Product marked as In Stock.',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        // Revert toggle if API fails
+        setState(() {
+          this.isOutOfStock = !isOutOfStock;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update stock status.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Revert toggle if exception occurs
+      print("print = $e");
+      setState(() {
+        this.isOutOfStock = !isOutOfStock;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   List<myProducts_model> pm = [];
@@ -107,21 +189,23 @@ class _EditProductState extends State<EditProduct> {
       for (int i = 0; i < b.length; i++) {
         pm.add(
           myProducts_model(
-              ID: bdy[i]['id'].toString(),
-              name: bdy[i]['product_name'].toString(),
-              price: bdy[i]['price'].toString(),
-              img: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['image'].toString(),
-              img2: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img2'].toString(),
-              img3: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img3'].toString(),
-              img4: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img4'].toString(),
-              img5: "${glb.API.baseURL}images/admin_pharmacy/" +
-                  bdy[i]['img5'].toString(),
-              desc: bdy[i]['Description'].toString(),
-              typ: bdy[i]['type'].toString()),
+            ID: bdy[i]['id'].toString(),
+            name: bdy[i]['product_name'].toString(),
+            price: bdy[i]['price'].toString(),
+            img: "${glb.API.baseURL}images/admin_pharmacy/" +
+                bdy[i]['image'].toString(),
+            img2: "${glb.API.baseURL}images/admin_pharmacy/" +
+                bdy[i]['img2'].toString(),
+            img3: "${glb.API.baseURL}images/admin_pharmacy/" +
+                bdy[i]['img3'].toString(),
+            img4: "${glb.API.baseURL}images/admin_pharmacy/" +
+                bdy[i]['img4'].toString(),
+            img5: "${glb.API.baseURL}images/admin_pharmacy/" +
+                bdy[i]['img5'].toString(),
+            desc: bdy[i]['Description'].toString(),
+            typ: bdy[i]['type'].toString(),
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
+          ),
         );
       }
       setState(() {
@@ -174,16 +258,18 @@ class _EditProductState extends State<EditProduct> {
       for (int i = 0; i < b.length; i++) {
         pm.add(
           myProducts_model(
-              ID: bdy[i]['id'].toString(),
-              name: bdy[i]['product_name'].toString(),
-              price: bdy[i]['price'].toString(),
-              img: a + bdy[i][rcvImg].toString(),
-              img2: a + bdy[i]['img2'].toString(),
-              img3: a + bdy[i]['img3'].toString(),
-              img4: a + bdy[i]['img4'].toString(),
-              img5: a + bdy[i]['img5'].toString(),
-              desc: bdy[i][desc].toString(),
-              typ: bdy[i]['type'].toString()),
+            ID: bdy[i]['id'].toString(),
+            name: bdy[i]['product_name'].toString(),
+            price: bdy[i]['price'].toString(),
+            img: a + bdy[i][rcvImg].toString(),
+            img2: a + bdy[i]['img2'].toString(),
+            img3: a + bdy[i]['img3'].toString(),
+            img4: a + bdy[i]['img4'].toString(),
+            img5: a + bdy[i]['img5'].toString(),
+            desc: bdy[i][desc].toString(),
+            typ: bdy[i]['type'].toString(),
+            out_of_stock: bdy[i]['out_of_stock'].toString(),
+          ),
         );
       }
       setState(() {
@@ -318,13 +404,17 @@ class _EditProductState extends State<EditProduct> {
 
   Remove_single_img(String img_no) async {
     // String url = glb.API.baseURL+ "DelAdminProd";
+    print(img_no);
+    print("removing image");
     Uri url = Uri.parse("");
     if (glb.usrTyp == '0') {
       url = Uri.parse(glb.API.baseURL + glb.API.DelAdminSingleProdImg);
     } else if (glb.usrTyp == '1') {
       url = Uri.parse(glb.API.baseURL + glb.API.DelDocSingleProdImg);
+    } else {
+      url = Uri.parse(glb.API.baseURL + glb.API.DelBranchDocSingleProdImg);
     }
-
+    print("connecting endpoint = ${url}");
     try {
       var res = await http.post(
         url,
@@ -333,9 +423,10 @@ class _EditProductState extends State<EditProduct> {
           'img_no': img_no,
         },
       );
+      print("Image number = $img_no");
 
       print("Del response == " + res.statusCode.toString());
-      print(res.body);
+      // print(res.body);
       if (res.statusCode == 200) {
         glb.SuccessToast(context, "Done");
         Navigator.pop(context);
@@ -414,7 +505,9 @@ class _EditProductState extends State<EditProduct> {
                         context,
                         "Do you want to delete this image?",
                         () {
-                          Remove_single_img(label);
+                          Remove_single_img((glb.usrTyp == '1' && index == 0)
+                              ? 'image'
+                              : label);
                         },
                       );
                     },
@@ -445,39 +538,88 @@ class _EditProductState extends State<EditProduct> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Edit Product")),
+      appBar: AppBar(
+        title: Text(
+          "Edit Product",
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
-        padding: EdgeInsets.all(16.0.sp),
+        padding: EdgeInsets.all(4.w),
         child: SingleChildScrollView(
           child: Card(
             elevation: 4,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(2.h)),
             child: Padding(
-              padding: EdgeInsets.all(16.0.sp),
+              padding: EdgeInsets.all(4.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  buildFormField("Product Name", prodNM_cont),
-                  buildFormField("Price", price_cont),
-                  buildFormField("Description", desc_cont),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      width: 20.w,
+                      child: SwitchListTile(
+                        tileColor: Colors.white,
+                        title: Text('Out of Stock',
+                            style: TextStyle(fontSize: 15.sp)),
+                        value: isOutOfStock,
+                        onChanged: (bool value) async {
+                          setState(() {
+                            isOutOfStock = value;
+                          });
+
+                          await toggleOutOfStockStatus(
+                            productId: widget.product.ID,
+                            isOutOfStock: value,
+                          );
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  _buildFormField("Product Name", prodNM_cont),
+                  SizedBox(height: 2.h),
+                  _buildFormField("Price", price_cont,
+                      keyboardType: TextInputType.number),
+                  SizedBox(height: 2.h),
+                  _buildFormField("Description", desc_cont, maxLines: 4),
+                  SizedBox(height: 3.h),
+                  Text("Product Images",
+                      style: TextStyle(
+                          fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 1.h),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 2.w,
+                    runSpacing: 2.h,
                     children:
                         List.generate(5, (index) => buildImageUpload(index)),
                   ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      updateProdDetails(
-                        widget.product.ID,
-                        prodNM_cont.text,
-                        price_cont.text,
-                        desc_cont.text,
-                      );
-                    },
-                    child: Txt(text: "UPDATE"),
+                  SizedBox(height: 4.h),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        updateProdDetails(
+                          widget.product.ID,
+                          prodNM_cont.text,
+                          price_cont.text,
+                          desc_cont.text,
+                        );
+                      },
+                      label: Txt(text: "Update"),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10.w, vertical: 1.5.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(2.h),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -485,6 +627,34 @@ class _EditProductState extends State<EditProduct> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFormField(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
+        SizedBox(height: 1.h),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: 'Enter $label',
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.5.h),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(1.5.h)),
+          ),
+        ),
+      ],
     );
   }
 

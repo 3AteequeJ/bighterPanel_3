@@ -9,6 +9,7 @@ class myProducts_model {
   late String img5;
   late String desc;
   late String typ;
+  late String out_of_stock;
 
   myProducts_model({
     required this.ID,
@@ -21,5 +22,6 @@ class myProducts_model {
     required this.img5,
     required this.desc,
     required this.typ,
+    required this.out_of_stock,
   });
 }
